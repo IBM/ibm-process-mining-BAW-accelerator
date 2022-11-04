@@ -26,10 +26,7 @@ This is a no-code accelerator that can be used by process owners and analysts wh
 ## How to Install the Accelerator
 Prerequisite: Python3
 
-Clone the github project to your local environment:
-```
-git clone git@github.ibm.com/automation-base-pak/ibm-process-mining-BAW-accelerator.git
-```
+Get this repository in your local environment
 
 Go to the project directory, create a python virtual environment, activate the environment and install the packages.
 
@@ -43,9 +40,12 @@ pip install pandas
 python manage.py migrate
 ```
 
+The Web server is using Django. You need to generate a Django secret and to add it line 25 of ```execute_script/settings.py```.
+You can generate a Django key from this site: https://djecrety.ir/
+
+
 Contact Patrick Megard to get access to the libraries contained in this github repo:
-https://github.ibm.com/automation-base-pak/ibm-process-mining-connectors-utils
-When you get access, download the zip file, and uncompress it.
+https://github.com/Patrick-Megard/ibm-process-mining-connectors-utilsWhen you get access, download the zip file, and uncompress it.
 
 You will obtain a folder called ```ibm-process-mining-connectors-utils-main```
 Copy all the files that are in this folder into the ibm-process-mining-BAW-accelerator
@@ -111,6 +111,8 @@ You can add any process or task data into the CSV. In the Web UI, list each data
 `requisition.requester,requisition.gmApproval,currentPosition.jobTitle,currentPosition.replacement.lastName`.
 
 The field name for each variable in the resulting CSV file starts with 'tsk'. Ex: tsk.requisition.gmApproval
+
+WARNING: a process mining project can only load CSV file with the same columns. If you add or remove a field during an extraction, you can't load it in an existing process mining project that loaded CSV files with different columns.
 
 You can find these data in BAW process designer.
 
