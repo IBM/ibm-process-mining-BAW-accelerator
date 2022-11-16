@@ -1,0 +1,58 @@
+{% csrf_token %}
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Automation Worflow - Process Mining Accelerator</title>
+  <link href='https://fonts.googleapis.com/css?family=IBM Plex Sans' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'IBM Plex Sans';
+      font-size: 22px;
+    }
+
+    .btn_mod {
+      border: none;
+      background-color: inherit;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: #eee;
+    }
+  
+
+    .black {
+      color: rgb(3, 3, 3);
+    }
+
+    .blue {
+      color: rgb(13, 93, 173);
+    }
+    .bx--form__helper-text {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<form action="addjob/" method="post">
+{% csrf_token %}
+{% with job_name_editable="True" %}
+{% include 'editjob.html' %}
+{% endwith %}
+
+<table style="width:1000px">
+  <TR>
+    <TD align="center"><input type="submit" value="Save">
+      <a href="/bawjobs/">Back</a>
+    </TD>
+  </TR>
+</table>
+</form>
+</html>

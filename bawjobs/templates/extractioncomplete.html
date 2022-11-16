@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Automation Worflow - Process Mining Accelerator</title>
+  <link href='https://fonts.googleapis.com/css?family=IBM Plex Sans' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'IBM Plex Sans';
+      font-size: 14px;
+    }
+
+    .bx--form__helper-text {
+      font-size: 12px;
+    }
+
+    .btn_mod {
+      border: none;
+      background-color: inherit;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: #eee;
+    }
+
+    .black {
+      color: rgb(3, 3, 3);
+    }
+
+    .blue {
+      color: rgb(13, 93, 173);
+    }
+
+  </style>
+</head>
+<h2 style='font-size:24px' align="left">Job {{ config.JOB.job_name }} extraction terminated</h2>
+<hr> 
+<p>
+    The extraction job {{ job_name }} is completed with status code = {{ return_code }}
+</p>
+<p>
+    <ul>
+        <li> status = 0 : successful
+        </li>
+        <li>
+            status < 0 : failed
+        </li>
+    </ul>
+</p>

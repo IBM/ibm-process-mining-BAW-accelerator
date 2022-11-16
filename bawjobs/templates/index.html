@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Automation Worflow - Process Mining Accelerator</title>
+  <link href='https://fonts.googleapis.com/css?family=IBM Plex Sans' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'IBM Plex Sans';
+      font-size: 14px;
+    }
+
+    .bx--form__helper-text {
+      font-size: 12px;
+    }
+
+    .btn_mod {
+      border: none;
+      background-color: inherit;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: #eee;
+    }
+
+    .black {
+      color: rgb(3, 3, 3);
+    }
+
+    .blue {
+      color: rgb(13, 93, 173);
+    }
+    table, th, td {
+        border: 1px solid rgb(0, 0, 0);
+        border-collapse: collapse;
+    }
+  </style>
+</head>
+<h2 style='font-size:24px' align="left">IBM Business Automation Workflow - IBM Process Mining Accelerator</h2>
+<hr> 
+<h1>Extraction Jobs</h1>
+<p >
+    <a href="createjob/">Create baw job</a>
+</p>
+{% if mybawjobs %}
+<table border="1">
+    <tr style="background-color: gainsboro ; font-size: 16px;">
+        <td>Job Name</td>
+        <td>BAW URL</td>
+        <td>Process Name</td>   
+        <td>IPM URL</td>
+        <td>project_name</td>
+        <td>Edit</td>
+        <td>Copy</td>
+        <td>Run</td>
+        <td>Delete</td>
+    </tr>
+{% endif %}
+
+{% for x in mybawjobs %}
+<tr>
+    <td>{{ x.job_name }}</td>
+    <td>{{ x.root_url }}</td>
+    <td>{{ x.process_name }}</td>
+    <td>{{ x.ipm_url }}</td>
+    <td>{{ x.ipm_project_key }}</td>
+    <td><a href="edit/{{ x.id }}">Edit</a></td>
+    <td><a href="copy/{{ x.id }}">Copy</a></td>
+    <td><a href="initextraction/{{ x.id }}" target="_blank">Run</a></td>
+    <td><a href="delete/{{ x.id }}">Delete</a></td>
+
+</tr>
+{% endfor %}
+</table>
+<hr>
+<p>
+  <ul>
+    <li> Create a new extraction job. This will generate a json file in config directory named config/config_job_name.json</li>
+    <li> Edit an existing extraction job. All the parameters can be modified except the job_name. Saved as a config json file</li>
+    <li> Copy an existing extraction job to create a new one. A new job_name is required. Saved as a new config json file</li>
+    <li> Run the extraction job. The start page let modify the execution parameters before running. </li>
+    <li> Delete extraction job. Delete the job from the database. The json file is not deleted</li>
+  </ul>
+</p>
+</html>

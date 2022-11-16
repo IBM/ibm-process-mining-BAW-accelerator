@@ -1,0 +1,355 @@
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript">
+
+    function check_after_is_set() {
+        if (document.getElementById('baw_modified_after').value == "")
+            alert('Modified after date is required to extract data with intervals')
+    }
+
+
+</script>
+<style>
+    /*
+    CSS for the main interaction
+    */
+    .accordion>input[type="checkbox"] {
+        position: absolute;
+        left: -100vw;
+    }
+
+    .accordion .content {
+        overflow-y: hidden;
+        height: 0;
+        transition: height 0.3s ease;
+    }
+
+    .accordion>input[type="checkbox"]:checked~.content {
+        height: auto;
+        overflow: visible;
+    }
+
+    .accordion label {
+        display: block;
+    }
+
+    /*
+    Accordion Styling
+    */
+
+    .accordion {
+        margin-bottom: 1em;
+    }
+
+    .accordion>input[type="checkbox"]:checked~.content {
+        padding: 15px;
+        border: 1px solid #e8e8e8;
+        border-top: 0;
+    }
+
+    .accordion .handle {
+        margin: 0;
+        font-size: 16px;
+        line-height: 8px;
+    }
+
+    .accordion label {
+        color: #333;
+        cursor: pointer;
+        font-weight: normsmalal;
+        padding: 9px;
+        background: #e8e8e8;
+    }
+
+    .accordion label:hover,
+    .accordion label:focus {
+        background: #d8d8d8;
+    }
+
+    .accordion .handle label:before {
+        font-family: 'fontawesome';
+        content: ">";
+        display: inline-block;
+        margin-right: 10px;
+        font-size: 16px;
+        line-height: 8px;
+        vertical-align: middle;
+    }
+
+    .accordion>input[type="checkbox"]:checked~.handle label:before {
+        content: "^";
+    }
+</style>
+
+<h2 style='font-size:24px' align="left">BAW-Process Mining Accelerator Configuration</h2>
+<hr>
+<table style="width:1000px">
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD style="width:200px">Job name*</TD>
+        {% if job_name_editable == "True" %}
+        <TD style="width:200px"><input type="text" id="job_name" name="job_name" size="30"
+                value="{{ config.JOB.job_name }}" required></TD>
+        {% elif job_name_editable == "False" %}
+        <TD style="width:200px">{{ config.JOB.job_name }}</TD>
+        {% endif %}
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text">
+                <i>The configuration will be saved in a file named config/config_jobname.json
+            </div>
+        </TD>
+    </TR>
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD align="left" colspan="4">
+            <div style="color:#797676" class="bx--form__helper-text">
+                <i>Fields with (*) are mandatory to create a job.
+            </div>
+        </TD>
+    </TR>
+</table>
+<hr>
+<section class="accordion">
+    <input type="checkbox" name="collapse" id="baw_connection">
+    <p class="handle">
+        <label for="baw_connection">
+            BAW connection - click to open
+        </label>
+    </p>
+    <div class="content">
+<table style="width:1000px">
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD style="width:200px">URL*</TD>
+        <TD style="width:200px"><input type="url" name="baw_root_url" id="baw_root_url" size="30"
+                value="{{ config.BAW.root_url }}" required></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>BAW root URL</i></div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>User ID*</TD>
+        <TD><input type="text" name="baw_user" id="baw_user" size="30" value="{{ config.BAW.user }}" required></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>BAW user id</i></div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Password*</TD>
+        <TD>           
+            <input type="password" name="baw_password" id="baw_password" size="20" value="{{ config.BAW.password }}">
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>BAW password </i></div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD> OR: Env Variable*</TD>
+        <TD>
+            <input type="text" name="baw_password_env_var" id="baw_password_env_var" size="20"
+                value="{{ config.BAW.password_env_var }}">
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Or environment variable that stores the password </i></div>
+ </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD colspan=4><div style="color:#797676" class="bx--form__helper-text"><i>You can store the password in an environment variable, 
+            such that it is not visible in the config file.<br>Ex linux: EXPORT BAW_ADMIN_PASSWORD=myadminpassword. Then enter BAW_ADMIN_PASSWORD in this field</i></div></TD>
+    </TR>
+</table>
+</div>
+</section>
+<table style="width:1000px">
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD style="width:200px">Project acronym*</TD>
+        <TD style="width:200px"><input type="text" name="baw_project" id="baw_project" size="30" value="{{ config.BAW.project }}" required>
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>ex: 'HSS'</i>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Process name*</TD>
+        <TD><input type="text" name="baw_process_name" id="baw_process_name" size="30"
+                value="{{ config.BAW.process_name }}" required></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>ex: 'HR Requisition'</i>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Include exposed variables: </TD>
+        <TD>
+            <input type="checkbox" id="baw_export_exposed_variables" name="baw_export_exposed_variables" {{
+                baw_exposed_variables }}>
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Exposed process variables are exported
+                    automatically</i>
+            </div>
+        </TD>
+    </TR>
+</table>
+<table>
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD style="width:200px">Business data</TD>
+        <TD><textarea name="baw_task_data_variables" id="baw_task_data_variables" rows="3"
+                cols="25">{{ baw_task_data_variables }}</textarea></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>List data paths to include.
+                    Ex:<br>requisition.requester,currentPosition.jobTitle,currentPosition.replacement.lastName</i>
+            </div>
+        </TD>
+    </TR>
+</table>
+<hr>
+<table style="width:1000px">
+    <TR>
+        <TD style="width:50px"></TD>
+        <TD style="width:200px">Modified before</TD>
+        <TD style="width:200px"><input type="datetime-local" step="1" name="baw_modified_before"
+                id="baw_modified_before" size="40" value="{{ baw_modified_before }}" </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified before this
+                    date</i>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Modified after</TD>
+        <TD><input type="datetime-local" step="1" name="baw_modified_after" id="baw_modified_after" size="40"
+                value="{{ baw_modified_after }}" </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified after this
+                    date</i>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD># of threads</TD>
+        <TD><input type="number" min=1 value=1 name="baw_thread_count" id="baw_thread_count" size="40"
+                value="{{ config.BAW.thread_count }}"></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Speed-up the extraction but more pressure on
+                    BAW</i>
+            </div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Loop update rate</TD>
+        <TD><input type="time" step=1 id="baw_update_rate" name="baw_update_rate" size="2"
+                value="{{ baw_update_rate }}"></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Ex: the extraction is done every 1 min</i>
+            </div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Create a CSV at each loop </TD>
+        <TD>
+            <input type="checkbox" id="baw_csv_at_each_loop" name="baw_csv_at_each_loop" {{ baw_csv_at_each_loop }}>
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>A CSV is generated at each loop. Otherwise only
+                    when +500k events are extracted</i>
+            </div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Extraction interval (days)</TD>
+        <TD><input type="number" min=0 id="baw_extraction_interval" name="baw_extraction_interval" size="2"
+                value="{{ config.BAW.extraction_interval }}" onchange="check_after_is_set()"></TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Ex: extract 2 days of data and shift to next 2
+                    days if we loop. Requires setting modified_after </i>
+            </div>
+        </TD>
+    </TR>
+</table>
+<hr>
+<section class="accordion">
+    <input type="checkbox" name="collapse" id="ipm_connection">
+    <p class="handle">
+        <label for="ipm_connection">
+            Process Mining configuration (optional) - click to open
+        </label>
+    </p>
+    <div class="content">
+        <table style="width:1000px">
+            <TR>
+                <TD></TD>
+                <TD align="left" colspan="2">
+                    <div style="color:#797676" class="bx--form__helper-text">
+                        <i>If the form is empty, upload the CSV files manually.<br>
+                    </div>
+                </TD>
+            </TR>
+        </table>
+        <table style="width:1000px">
+            <TR>
+                <TD style="width:50px"></TD>
+                <TD style="width:200px">Version</TD>
+                <TD style="width:200px"><select name="ipm_version" id="ipm_version">
+                        <option value="1.13.1+" {{ selected_version1131 }}>1.13.1 and after</option>
+                        <option value="before 1.13.1" {{ selected_version1130 }}>1.13.0 and before</option>
+                    </select>
+                </TD>
+            </TR>
+            <TR>
+                <TD></TD>
+                <TD>URL</TD>
+                <TD><input type="url" name="ipm_url" id="ipm_url" size="30" value="{{ config.IPM.url}}"></TD>
+                <TD>
+                    <div style="color:#797676" class="bx--form__helper-text"><i>Required for auto-upload </i></div>
+                </TD>
+            </TR>
+            <TR>
+                <TD></TD>
+                <TD>User ID</TD>
+                <TD><input type="text" name="ipm_user_id" id="ipm_user_id" size="30" value="{{ config.IPM.user_id}}">
+                </TD>
+                <TD>
+                    <div style="color:#797676" class="bx--form__helper-text"><i>Required for auto-upload </i></div>
+                </TD>
+            </TR>
+            <TR>
+                <TD></TD>
+                <TD>API key</TD>
+                <TD><input type="password" name="ipm_api_key" id="ipm_api_key" size="30"
+                        value="{{ config.IPM.api_key}}"></TD>
+                <TD>
+                    <div style="color:#797676" class="bx--form__helper-text"><i>Required for auto-upload </i></div>
+                </TD>
+            </TR>
+            <TR>
+                <TD></TD>
+                <TD>Organization key</TD>
+                <TD><input type="text" name="ipm_org_key" id="ipm_org_key" size="30" value="{{ config.IPM.org_key}}">
+                </TD>
+                <TD>
+                    <div style="color:#797676" class="bx--form__helper-text"><i>Required for auto-upload </i></div>
+                </TD>
+            </TR>
+            <TR>
+                <TD></TD>
+                <TD>Project key</TD>
+                <TD><input type="text" name="ipm_project_key" id="ipm_project_key" size="30"
+                        value="{{ config.IPM.project_key}}"></TD>
+                <TD>
+                    <div style="color:#797676" class="bx--form__helper-text"><i>Required to upload to an existing
+                            project, or to create a new one (no blank space in the name)</i></div>
+                </TD>
+            </TR>
+        </table>
+    </div>
+</section>

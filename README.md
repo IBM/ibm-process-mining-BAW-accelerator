@@ -1,9 +1,6 @@
 # Accelerator for IBM Business Automation Workflow and IBM Process Mining
 ## NOTE
-To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com) to get access to this repository:
-
-https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
-
+To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
 
 ## Introduction
 This repository is a free contribution provided as-is to easily connect IBM Business Automation Workflow and IBM Process Mining.
@@ -27,7 +24,7 @@ This is a no-code accelerator that can be used by process owners and analysts wh
 - Run several extraction jobs that can be stopped and resumed.
 
 ## How to Install the Accelerator
-Prerequisite: Python3
+Prerequisite: Python3 
 
 Get this repository in your local environment
 
@@ -39,7 +36,6 @@ source myenv/bin/activate
 pip install -r requirements.txt
 pip install django
 pip install requests
-pip install pandas
 python manage.py migrate
 ```
 
@@ -48,9 +44,7 @@ You can generate a Django key from this site: https://djecrety.ir/
 
 
 Contact Patrick Megard to get access to the libraries contained in this github repo:
-https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
-
-When you get access, download the zip file, and uncompress it.
+https://github.com/Patrick-Megard/ibm-process-mining-connectors-utilsWhen you get access, download the zip file, and uncompress it.
 
 You will obtain a folder called ```ibm-process-mining-connectors-utils-main```
 Copy all the files that are in this folder into the ibm-process-mining-BAW-accelerator
@@ -64,27 +58,46 @@ source myenv/bin/activate
 
 Run the accelerator:
 ```
-python manage.py runserver
+python3 manage.py runserver
 ```
 
 When the server is started, open a web browser and connect to your local host URL: `http://127.0.0.1:8000/`
+
+Alternatively, when a configuration json file is saved, you can directly run the extraction by executing the python program
+```
+python3 BAW_to_IMP.py config/config_myJobName.json
+```
 
 ## Configuring the extraction job
 Each configuration requires a job name. The job name is used to identify the json configuration files and the CSV files.
 For instance, if the job name is `myJobName`, the configuration file is saved in `config/config_myJobName.json`.<br>
 The BAW event logs are saved in `data/BAW_myJobName_<timestamp>.zip` 
 
-When an extraction configuration is started with the button 'Start extraction', the configuration file is automatically saved. 
-- Running extraction jobs can be stopped by clicking 'Stop extraction' button.
-- By just providing the job name and clicking 'Resume extraction' button, you can restart an extraction without having to fill-out all the form. You can change the update rate.
-- Alternatively, you can launch the extraction program from a shell: `python3 BAW_to_IMP.py config/config_myJobName.json`
+The Web UI enables:
+- Creating a new extraction configuration 
+- Editing an existing configuration
+- Copying a new extraction configuration from an existing one (time saving)
+- Deleting a configuration. Note that the json file is not deleted, the entry in the application DB is deleted.
 
-You can run several jobs simultaneously. The program executes a new python program as a subprocess each time you click the 'Start extraction' button. At any moment you can stop a job, or restart a job, providing that the corresponding configuration exists in config/.
+## BAW connection and password
+The BAW connection requires a root URL, a user ID, and a password.
 
-### Extraction loop rate and extraction interval
-- Extraction loop rate defines the pause time between each extraction. The UI proposed pre-defined choices as seconds, minutes, and hours. The JSON file enables entering any value as seconds. When the job includes a loop rate, the last extraction period is saved such that restarting the job does not extract the same data again.
-- Extraction interval is expressed as days. This value specifies a time window for which we want to extract BAW data. For example if the extraction interval is 1 day, at each loop we will extract 1 day of data, and the time window is shifted for the next loop. An extraction loop rate and a modified_after date are required to use this feature.
 
+## Running an extraction job
+Before running an extraction job, you can set some running parameters
+- Extraction loop rate defines the pause time between each extraction. The JSON file enables entering any value as seconds. When the job includes a loop rate, the last extraction period is saved such that restarting the job does not extract the same data again.
+- Extraction interval is expressed as days. This value specifies a time window for which we want to extract BAW data. For example if the extraction interval is 1 day, at each loop we will extract 1 day of data, and the time window is shifted for the next loop. An extraction loop rate and a modified_after date are required to use this feature. Extraction interval can be used to lower the load on the BAW server and the RAM needed.
+- Number of threads increases the speed by splitting the extraction work into several threads. This increase the load on the BAW server too. A good balance needs to be found.
+- Instance limit is used for testing only: each extraction stops when the number of instance specified here is reached. This is useful when sizing the time required to get historical data, or the load on the BAW server or on the RAM
+- Create a CSV at each loop generates a CSV file at each extraction loop (if events were retrieved). When unchecked, the CSV file is generated when the job is completed, stopped, or when the number of events reaches 500k events (the value can be changed in a code variable)
+
+- A job can be stopped if it is looping. The stop is taken into consideration while the job is sleeping.
+- Several jobs can be executed simultaneously.
+
+Running a job without the WebUI is straightforward, and this way it can be scheduled using crontabs
+```
+python3 BAW_to_IMP.py config/config_myJobName.json
+```
 
 ## Configuring the accelerator for BAW
 The accelerator settings are managed in a form opened at `http://127.0.0.1:8000/`
@@ -94,9 +107,15 @@ You can use the accelerator to fetch the data from BAW and store the resulting C
 - The process name (application) that you want to mine
 - The project name to which the process belongs (acronym)
 
+- You can enter the password in the Web UI or in the configuration file. But the password is visible in the configuration file
+- You can store the password in an environment variable of your choice, and provide the environment variable name to the Web UI. This way, the password is not visible in the configuration file. <br>
+Example from a linux shell:
+```
+export BAW_PASSWORD=myBAWPassword
+```
+
 The other BAW parameters are optional:
-- Number of threads: used to balance the extraction process on several threads. Keep empty if the extraction seems to occur in a reasonable time
-- Number of instances: limit the number of instances extracted
+
 - Modified after: Retrieve process instances modified after the date expressed like this: 2022-06-01T22:07:33Z
 - Modified before: Retrieve process instances modified before the date expressed like this: 2022-06-01T22:07:33Z
 
@@ -109,7 +128,7 @@ In BAW, you can find the project name (acronym) in parenthesis besides the proce
 See a screen shot of the BAW inspector at the bottom of this document
 
 ## Extracting the BAW business data
-If the process has declared tracked data, these data are automatically added to each event. The field name of each tracked data in the resulting CSV file starts with 'trkd'. Ex: trkd.requisition.requester
+- Include exposed variables: If the process has declared exposed variables, these data can be automatically added to each event. The field name of each tracked data in the resulting CSV file starts with 'trkd'. Ex: trkd.requisition.requester. 
 
 You can add any process or task data into the CSV. In the Web UI, list each data path separated with a comma (,). For example:
 
@@ -200,12 +219,11 @@ You can use the accelerator to fetch the data from BAW, and to automatically loa
 - User ID
 - API Key
 - Organization ID
-
-To create a new project and upload the data:
-- Project name
-
-To upload the data into an existing project:
 - Project key
+
+If the project key exists in the organization, the data is loaded into this project.<br>
+If the project key does not exist yet, a new project is created with the same name.
+Note= project keys can't include blank spaces. Use names like 'hiring-process'
 
 In the IBM Process Mining User Profile, make sure you have API key enabled, and copy the API account and the API key.
 
@@ -250,18 +268,11 @@ Note how the BAW business data are implemented in JSON.
         "user_id": "user.name",
         "api_key": "2345",
         "org_key": "567890",
-        "project_key": "my-project",
-        "project_name": ""
+        "project_key": "my-project"
     }
 }
 ```
 
-We recommend that configuration files are stored in the directory congif/, and that the configuration file name complies with the following conventions: config_<job_name>.json. Then you can start/resume the job using the web server UI.
-
-Alternatively you can execute each job using the following command:
-```
-python3 NearRealTimeUpdates.py config_<job_name>.json
-```
 
 ## Screen shot to find connection parameters
 
