@@ -229,50 +229,46 @@ In the IBM Process Mining User Profile, make sure you have API key enabled, and 
 
 See a screen shot of the Process Mining screen at the bottom of this document
 
-![BAW-IPM-Connection](./pictures/BAW_IPM_WebUI.jpeg)
-
 
 ## Configuration file
-Instead of using the web server to configure an extraction job, you can create an edit configuration files. The configuration below results from the parameters entered in the previous form.
+Instead of using the web server to configure an extraction job, you can create an edit configuration files. The configuration below results from the parameters entered with the Web UI.
 Note how the BAW business data are implemented in JSON.
 
 ```
 {
     "JOB": {
-        "job_name": "test",
-        "update_rate": 60,
+        "job_name": "CREATED",
+        "update_rate": 0,
         "exit": 0
     },
-        "BAW": {
-        "root_url": "BAW.com",
+    "BAW": {
+        "root_url": "http://baw.com/",
         "user": "admin",
-        "password": "admin",
-        "project": "HSS",
-        "process_name": "Standard HR Open New Position",
-        "modified_after": "2021-10-01T00:00:00Z",
+        "password": "",
+        "password_env_var": "BAW_ADMIN_PASSWORD",
+        "project": "prj",
+        "process_name": "process",
+        "modified_after": "",
         "modified_before": "",
-        "extraction_interval": 5,
+        "extraction_interval": 0,
         "thread_count": 1,
         "instance_limit": -1,
-        "task_data_variables": [
-            "requisition.requester",
-            "requisition.gmApproval",
-            "currentPosition.jobTitle",
-            "currentPosition.replacement.lastName"
-        ],
+        "task_data_variables": [],
+        "export_exposed_variables": false,
+        "csv_at_each_loop": false,
         "last_after": "",
         "last_before": ""
     },
     "IPM": {
-        "url": "https://IPM.com",
-        "user_id": "user.name",
-        "api_key": "2345",
-        "org_key": "567890",
-        "project_key": "my-project"
+        "url": "",
+        "user_id": "",
+        "api_key": "",
+        "org_key": "",
+        "project_key": "",
+        "version": "1.13.1+"
     }
 }
 ```
-
 
 ## Screen shot to find connection parameters
 
