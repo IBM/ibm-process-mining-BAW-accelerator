@@ -11,65 +11,89 @@ from requests.auth import HTTPBasicAuth
 import os
 import logging
 import re
+import asyncio
+
 
 PRINT_TRACE = 1
 BACKUP_FILENAME = "BAW_IPM_backup.idp"
 BAW_SERVER_TIME_ZONE = 0 # add or remove hours / greenwich timezone
 CSV_PATH = "data/"
-EVENT_NUMBER_THRESHOLD = 500000 # used when historical extraction with time period. When we pass this number, we create a CSV file
 
-
-def config_with_extraction_interval(config, run_config):
-    if (config['BAW']['last_after'] == ""):
-        # for the first run we just keep modified_after as specified in the configuration file
-        # the instruction below is not needed since this is already the case. We keep it for clarity
-        run_config['BAW']['modified_after']=config['BAW']['modified_after']
-    else:
-        # next run of a loop with a period
-        run_config['BAW']['modified_after']=config['BAW']['last_before']
-
-    # compute the extraction interval
-    extraction_interval = timedelta(days=config['BAW']['extraction_interval'])
-
-    # compute the run_before as the minimum between after+period and modified_before if any
-    run_before = datetime.strptime(run_config['BAW']['modified_after'], "%Y-%m-%dT%H:%M:%SZ") + extraction_interval
-
-    # if there is a modified_before date in the config file, we need to stop when we reach this date
-    if (config['BAW']['modified_before'] != ""):
-        # There is a modified_before limit set by the user
-        run_before_max = datetime.strptime(config['BAW']['modified_before'], "%Y-%m-%dT%H:%M:%SZ")
-        if (run_before > run_before_max):
+def  config_with_loop_and_interval_shift(now, config):
+    if (config['BAW']['last_before'] != ""):
+        # next loop (for the first one, we just extract with the dates)
+        # compute the next interval from the duration between after and before
+        after = datetime.strptime(config['BAW']['modified_after'], "%Y-%m-%dT%H:%M:%SZ")
+        before = datetime.strptime(config['BAW']['modified_before'], "%Y-%m-%dT%H:%M:%SZ")
+        duration = before - after
+        last_before = datetime.strptime(config['BAW']['last_before'], "%Y-%m-%dT%H:%M:%SZ")
+        config['BAW']['modified_after'] = config['BAW']['last_before']
+        before = last_before + duration
+        config['BAW']['modified_before'] = before.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # stop when modified_before >= now
+        if (before >= now):
+            config['BAW']['modified_before'] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
             config['JOB']['exit'] = 1
-            run_config['BAW']['modified_before'] = config['BAW']['modified_before']
-        else:
-            run_config['BAW']['modified_before'] = run_before.strftime("%Y-%m-%dT%H:%M:%SZ")
-    else:
-        # No modified before limit set by the user, current date is the limit for the run
-        # If run_before > run_before_now, we take run_before_now
-        # WARNING: the BAW server might use another time, it might be needed to adjust the time
-        run_before_now = datetime.fromtimestamp(time.time())
-        if (run_before > run_before_now):
-            run_config['BAW']['modified_before'] = run_before_now.strftime("%Y-%m-%dT%H:%M:%SZ")
-            # we start runtime updates. Should we exit? and then we have runtime update jobs for updates
-            # the difference between runtime updates and extraction interval is that we would keep the same CSV for extraction interval instead
-            # of sending a new one for each period. And for the update we would need a different update loop rate
-            # exit at next loop
 
-            config['JOB']['exit'] = 1
-        else:
-            run_config['BAW']['modified_before'] = run_before.strftime("%Y-%m-%dT%H:%M:%SZ")
+def config_for_near_real_time_update(now, config):
+    # loop to get new data. 'modified_after' can be set, 'modified_before' must be """, executed with now
+    config['BAW']['modified_before'] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # first loop get everything until now, next get new data
+    if (config['BAW']['last_before'] != ""):
+        # next loop start at last_before
+        config['BAW']['modified_after'] = config['BAW']['last_before']
 
-def config_without_extraction_interval(config, run_config):
-    # no extraction_interval, first run get everything until now, next get new data
-    if (config['BAW']['last_before'] == ""):
-        # first run get everything until now, next get new data
-        # instruction below not needed, but kept for clarity
-        run_config['BAW']['modified_after'] = config['BAW']['modified_after']
+def config_for_instance_limit(now, instance_list, config):
+    if (instance_list == []):
+        # get instances, modified_after and modified_before are optional
+        if (config['BAW']['modified_before'] == ""):
+            config['BAW']['modified_before'] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if (config['BAW']['last_before'] != ""):
+                # Another loop where we need to extract new instances for near real time updates
+                config['BAW']['modified_after'] = config['BAW']['last_before']
     else:
-        # next runs start at last_before (was now during the last execution)
-        run_config['BAW']['modified_after'] = config['BAW']['last_before']
-    now = datetime.fromtimestamp(time.time())
-    run_config['BAW']['modified_before'] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # next loops where we continue processing the instance_list, without fetching instances from BAW: keep same dates as before. 
+        config['BAW']['modified_before'] = config['BAW']['last_before']
+        if (instance_list is not None and len(instance_list) <= config['BAW']['instance_limit']):
+            #if instance_list size < instance_limit, that's the last loop, exit if modified_before is set
+            if (config['BAW']['modified_before'] != "") and config['BAW']['interval_shift'] != True:
+                # We stop when we are done, except is interval_shift is true, in which case we should continue until now
+                print("config_with_loop_and_instance_limit: last extraction before exit %s" % len(instance_list))
+                config['JOB']['exit'] = 1
+
+def run_extraction(now, instance_list, event_data, config, logger):
+    # run_config is what is being used at each execution
+    # BAW auth
+    # run_config['BAW']['auth_data'] = get_BAW_auth(config['BAW'], logger)
+    config['BAW']['auth_data'] = get_BAW_auth(config['BAW'], logger)
+    modified_after_orig = config['BAW']['modified_after']
+    modified_before_orig = config['BAW']['modified_before']
+
+    # loop_rate : different scenarios depending on the config parameters
+    if config['BAW']['loop_rate'] != 0 :
+        if config['BAW']['interval_shift'] == True:
+            # there must be an interval, and we shift it at each loop
+            if config['BAW']['modified_after'] == "" or config['BAW']['modified_before'] == "":
+                print("Error: Modified After date is required for loops with an extraction interval")
+                config['JOB']['exit'] = 1
+                return [], []
+            else:
+                config_with_loop_and_interval_shift(now, config)        
+        elif config['BAW']['instance_limit'] == 0 and config['BAW']['modified_before'] == "":
+            config_for_near_real_time_update(now, config)
+        if config['BAW']['instance_limit'] > 0:
+            config_for_instance_limit(now, instance_list, config)
+    
+    instance_list = baw.extract_baw_data(instance_list, event_data, config['BAW'], logger)
+
+    # Remember what was the last extraction, such that we don't get the same data again during the next loop
+    config['BAW']['last_before'] = config['BAW']['modified_before']
+    # Bring back original data in config such that it can be saved at the end of the loop without loosing the original intent
+    config['BAW'].pop('auth_data')
+    config['BAW']['modified_after'] = modified_after_orig
+    config['BAW']['modified_before'] = modified_before_orig
+
+    return event_data, instance_list
 
 def get_BAW_auth(config, logger):
 
@@ -90,62 +114,34 @@ def get_BAW_auth(config, logger):
         pwd = config['password']
     return(HTTPBasicAuth(config['user'], pwd))
 
-def run_extraction(event_data, config, run_config, logger):
-    # run_config is what is being used at each execution
-    # BAW auth
-    #run_config['BAW']['auth_data'] = HTTPBasicAuth(run_config['BAW']['user'], run_config['BAW']['password'])
-    run_config['BAW']['auth_data'] = get_BAW_auth(config['BAW'], logger)
-
-    # different situations depending on the config parameters: is there an update rate? is there an extraction interval?
-    if (config['JOB']['update_rate'] and config['BAW']['extraction_interval']):
-        if (config['BAW']['modified_after'] == ""):
-            print("Error: Modified After date is required for loops with an extraction interval")
-            exit()
-        else:
-            config_with_extraction_interval(config, run_config)    
-              
-    elif (config['JOB']['update_rate']):
-        config_without_extraction_interval(config, run_config)
-        
-    # reset the event_data array where we add all the events
-    baw.extract_baw_data(event_data, run_config['BAW'], logger)
-
-    # Update original config for the next execution (as a loop or a restart)
-    # if (update_rate and extraction_interval and (modified_after!= " ")) :
-    if (config['JOB']['update_rate']):
-        config['BAW']['last_after'] = run_config['BAW']['modified_after']
-        config['BAW']['last_before'] = run_config['BAW']['modified_before']
-    
-    return event_data
-
 def generate_csv(event_data, run_config):
     run_config['BAW']['csvfilename'] = "%s_%s_%d" % ("BAW", run_config['JOB']['job_name'], time.time_ns()/1000000)
     run_config['BAW']['csvpath'] = CSV_PATH
     return baw.generate_csv_file(event_data, run_config['BAW'])
 
-def upload_csv(run_config, config, logger):
+def upload_csv(config, logger):
     print("uploading")
-    r = ipm.ws_post_sign(run_config['IPM'])
+    r = ipm.ws_post_sign(config['IPM'])
     if (r==0):
         print("Error getting the signature for Process Mining")
         logger.error("Error getting the signature for Process Mining")
         exit
     else:
-        run_config['IPM']['sign'] = r
+        config['IPM']['sign'] = r
 
     #print("Initialize event log upload")
 
-    if (run_config['IPM']['project_key']):
+    if (config['IPM']['project_key']):
         # If 'project_key' is mandatory, it exists or not (then create the project)
         # Replace ' ' with '-'
-        run_config['IPM']['project_key']=re.sub(' ','-', run_config['IPM']['project_key'])
+        config['IPM']['project_key']=re.sub(' ','-', config['IPM']['project_key'])
         # test if the project_key exists
-        r = ipm.ws_get_project_info(run_config['IPM'])
+        r = ipm.ws_get_project_info(config['IPM'])
         if (r.status_code == 200):
-            r = ipm.upload_csv_and_createlog(run_config['IPM'])
+            r = ipm.upload_csv_and_createlog(config['IPM'])
             if (r):
-                print("Event-log added to Process Mining project %s" % run_config['IPM']['project_key'])
-                logger.info("Event-log added to Process Mining project %s" % run_config['IPM']['project_key'])
+                print("Event-log added to Process Mining project %s" % config['IPM']['project_key'])
+                logger.info("Event-log added to Process Mining project %s" % config['IPM']['project_key'])
             else : 
                 print("Event-log upload failed")
                 logger.info("Event-log upload failed")
@@ -157,11 +153,11 @@ def upload_csv(run_config, config, logger):
                 logger.error(r.json()['data']['data'])
             elif (r.json()['error'] == 1002):
                 # project does not exist, create it and upload
-                run_config['IPM']['project_name'] = run_config['IPM']['project_key']
-                r = ipm.create_and_load_new_project(run_config['IPM'])
+                config['IPM']['project_name'] = config['IPM']['project_key']
+                r = ipm.create_and_load_new_project(config['IPM'])
                 if (r.status_code == 200) : 
-                    print("Process Mining: Process created %s" % run_config['IPM']['project_name'])
-                    logger.info("Process Mining: Process created %s" % run_config['IPM']['project_name'])
+                    print("Process Mining: Process created %s" % config['IPM']['project_name'])
+                    logger.info("Process Mining: Process created %s" % config['IPM']['project_name'])
                     projectkey = r.json()['projectKey']
                     config['IPM']['project_key'] = projectkey
                 else :
@@ -172,8 +168,9 @@ def upload_csv(run_config, config, logger):
                 logger.error("unauthorized access to processmining")
 
 
-
 def main(argv):
+    #debug
+    if (argv == []) : argv=["","config/config_newBAWextract.json"]
     if (len(argv) == 1) :
         print("configuration file required")
         return
@@ -188,6 +185,7 @@ def main(argv):
     # for historical scenario with extraction interval, we keep generate the csv only when the size limit is reached
     event_data = []
     run_config = {}
+    instance_list = []
 
     # We need one logger per JOB. Save logs into logs/job_name.log
     with open(argv[1], 'r') as file:
@@ -200,48 +198,71 @@ def main(argv):
         with open(argv[1], 'r') as file:
             config = json.load(file) # keep the original
             file.close()
-        with open(argv[1], 'r') as file:
-            run_config = json.load(file) # used to run the extraction with modified values
-            file.close()
 
-
-
-        # if update_rate == 0, exit at the next loop -- to be set on run_config (executed)
-        if (config['JOB']['update_rate'] == 0):
-            run_config['JOB']['exit'] = 1
-        run_config['BAW']['BAW_fields'] = baw_fields
-        run_config['IPM']["backup_filename"] = BACKUP_FILENAME
-        run_config['BAW']['event_number_threshold'] = EVENT_NUMBER_THRESHOLD
-
-
-        # Adjust the time entered by the user to the BAW Server Time Zone
+       # Adjust the time entered by the user to the BAW Server Time Zone
         now = datetime.fromtimestamp(time.time())
+        #print("Current local time = %s" % now.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
         time_adjust = timedelta(hours=BAW_SERVER_TIME_ZONE)
         now = now + time_adjust
+        #print("Current server time = %s" % now.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
-        print("Starting extraction for job name: %s" % run_config['JOB']['job_name'])
-        run_extraction(event_data, config, run_config, logger)
+        # if loop_rate == 0, exit at the end of the run
+        if (config['BAW']['loop_rate'] == 0):
+            config['JOB']['exit'] = 1
+
+        config['BAW']['BAW_fields'] = baw_fields
+        config['IPM']["backup_filename"] = BACKUP_FILENAME
+
+
+        print("Starting extraction for job name: %s" % config['JOB']['job_name'])
+        result = run_extraction(now, instance_list, event_data, config, logger)
+        event_data = result[0]
+        instance_list = result[1]
 
         if (event_data != []) :
-            if ((run_config['JOB']['exit'] == 1) or 
-            (len(event_data) >= run_config['BAW']['event_number_threshold']) or
-            run_config['BAW']['csv_at_each_loop'] == True):
+            if ((config['JOB']['exit'] == 1) or 
+            (len(event_data) >= config['BAW']['event_number_csv_trigger']) or
+            config['BAW']['csv_at_each_loop'] == True):
                 # exit == 1 if job stopped, or modified_before date is reached, or update_loop==0
-                # event_number_threshold only for historical with interval period. To be set before
-                csvzipfilepath = generate_csv(event_data, run_config)
+                # event_number_csv_trigger only for historical with interval period. To be set before
+                csvzipfilepath = generate_csv(event_data, config)
                 # re-initialize event_data
                 event_data = []
-                if (run_config['IPM']['url']!=""):
+                if (config['IPM']['url']!=""):
                     # automatic upload to IBM Process Mining
-                    run_config['IPM']['csv_filename'] = csvzipfilepath
-                    upload_csv(run_config, config, logger)
+                    config['IPM']['csv_filename'] = csvzipfilepath
+                    upload_csv(config, logger)
 
         # Store the BAW config with the latest update, such that the user can restart from where he stopped
+        # Remove fields that we don't want to save
+        baw_keys = config['BAW']
+        if 'csvfilename' in baw_keys:
+            config['BAW'].pop('csvfilename')
+        if 'backup_filename' in baw_keys:
+            config['BAW'].pop('backup_filename')
+        if 'csvpath' in baw_keys:
+            config['BAW'].pop('csvpath')       
+        config['BAW'].pop('BAW_fields')
+
+        ipm_keys = config['IPM'].keys() 
+        if 'ts' in ipm_keys:
+            config['IPM'].pop('ts')
+        if 'sign' in ipm_keys:
+            config['IPM'].pop('sign')
+        if 'job_key' in ipm_keys:
+            config['IPM'].pop('job_key')
+        if 'backup_filename' in ipm_keys:
+            config['IPM'].pop('backup_filename')
+        if 'csv_filename' in ipm_keys:
+            config['IPM'].pop('csv_filename')           
+
+        # Save the configuration (last_before needs to be stored)
         with open(argv[1], 'w') as file:
             json.dump(config, file, indent=4)
             file.close()
 
-        if ((config['JOB']['exit'] == 1) or (run_config['JOB']['exit'] == 1)) :
+        if config['JOB']['exit'] == 1:
             # Exit requested or required when before_date is reached, or when loop_rate == 0 (no loop)
             config['JOB']['exit'] = 0
             with open(argv[1], 'w') as file:
@@ -251,7 +272,7 @@ def main(argv):
             exit() 
 
         # Sleep until the next loop
-        time.sleep(config['JOB']['update_rate'])
+        time.sleep(config['BAW']['loop_rate'])
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -1,12 +1,12 @@
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script type="text/javascript">
 
-    function check_after_is_set() {
-        if (document.getElementById('baw_modified_after').value == "")
-            alert('Modified after date is required to extract data with intervals')
+    function check_dates_are_set() {
+        if (document.getElementById('baw_modified_after').value == "" || document.getElementById('baw_modified_before').value == "")
+            alert('Modified after and modified before dates are required to extract data with intervals')
     }
 
-
+    
 </script>
 <style>
     /*
@@ -210,72 +210,28 @@
     </TR>
 </table>
 <hr>
-<table style="width:1000px">
+{% include 'executionparameters.html' %}
+<table style="width:950px" >
     <TR>
-        <TD style="width:50px"></TD>
-        <TD style="width:200px">Modified before</TD>
-        <TD style="width:200px"><input type="datetime-local" step="1" name="baw_modified_before"
-                id="baw_modified_before" size="40" value="{{ baw_modified_before }}" </TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified before this
-                    date</i>
-        </TD>
+      <TD style="width:50px"></TD>
+      <TD style="width:200px"></TD>
+      <TD style="width:300px"></TD>
+      <TD style="width:400px"></TD>
+    </TR> 
+    <TR style="font-size:12px">
+      <TD></TD>
+      <TD>Last extraction: Modified before</TD>
+      <TD>
+        <input type="datetime-local" step=1 id="baw_last_before" name="baw_last_before" size="40" value="{{ baw_last_before }}">
+      </TD>
+      <TD>
+        <div style="color:#797676" class="bx--form__helper-text"><i>Store the 'modified_before' data from last extraction. Clear it
+            if you need to restart the same extraction.
+        </i>
+        </div>
+    </TD>
     </TR>
-    <TR>
-        <TD></TD>
-        <TD>Modified after</TD>
-        <TD><input type="datetime-local" step="1" name="baw_modified_after" id="baw_modified_after" size="40"
-                value="{{ baw_modified_after }}" </TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified after this
-                    date</i>
-        </TD>
-    </TR>
-    <TR>
-        <TD></TD>
-        <TD># of threads</TD>
-        <TD><input type="number" min=1 value=1 name="baw_thread_count" id="baw_thread_count" size="40"
-                value="{{ config.BAW.thread_count }}"></TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Speed-up the extraction but more pressure on
-                    BAW</i>
-            </div>
-        </TD>
-    </TR>
-    <TR>
-        <TD></TD>
-        <TD>Loop update rate</TD>
-        <TD><input type="time" step=1 id="baw_update_rate" name="baw_update_rate" size="2"
-                value="{{ baw_update_rate }}"></TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Ex: the extraction is done every 1 min</i>
-            </div>
-        </TD>
-    </TR>
-    <TR>
-        <TD></TD>
-        <TD>Create a CSV at each loop </TD>
-        <TD>
-            <input type="checkbox" id="baw_csv_at_each_loop" name="baw_csv_at_each_loop" {{ baw_csv_at_each_loop }}>
-        </TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>A CSV is generated at each loop. Otherwise only
-                    when +500k events are extracted</i>
-            </div>
-        </TD>
-    </TR>
-    <TR>
-        <TD></TD>
-        <TD>Extraction interval (days)</TD>
-        <TD><input type="number" min=0 id="baw_extraction_interval" name="baw_extraction_interval" size="2"
-                value="{{ config.BAW.extraction_interval }}" onchange="check_after_is_set()"></TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Ex: extract 2 days of data and shift to next 2
-                    days if we loop. Requires setting modified_after </i>
-            </div>
-        </TD>
-    </TR>
-</table>
+  </table>
 <hr>
 <section class="accordion">
     <input type="checkbox" name="collapse" id="ipm_connection">

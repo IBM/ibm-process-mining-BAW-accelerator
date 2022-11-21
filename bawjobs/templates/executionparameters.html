@@ -1,0 +1,68 @@
+
+<table style="width:950px">
+    <TR>
+      <TD style="width:50px"></TD>
+      <TD style="width:200px"></TD>
+      <TD style="width:300px"></TD>
+      <TD style="width:400px"></TD>
+    </TR> 
+    <TR> 
+    <TD></TD>
+    <TD>Loop rate</TD>
+    <TD>
+      <input type="time" step=1 id="baw_loop_rate" name="baw_loop_rate" size="40" value="{{ baw_loop_rate }}">
+      </TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>ex: Loops every 15 minutes. 0 means no loop</i></div></TD>
+    </TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD>Modified after</TD>
+      <TD>
+        <input type="datetime-local" step=1 id="baw_modified_after" name="baw_modified_after" size="40" value="{{ baw_modified_after }}">
+      </TD>
+      <TD>
+        <div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified after this date</i>
+        </div>
+      </TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD>Modified before</TD>
+      <TD>
+        <input type="datetime-local" step=1 id="baw_modified_before" name="baw_modified_before" size="40" value="{{ baw_modified_before }}">
+      </TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Retrieve instances modified before this date</i>
+        </div>
+      </TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD># instance limit</TD>
+      <TD><input type="number" min=0 vid="baw_instance_limit" name="baw_instance_limit" size="40" value="{{ config.BAW.instance_limit }}"></TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Use to experiment the job (no loop_rate) or reduce workload (with loop_rate). 0: unlimited</i></div></TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD>Interval auto shift</TD>
+      <TD><input type="checkbox" id="baw_interval_shift" name="baw_interval_shift" {{ baw_interval_shift }} onchange="check_dates_are_set()"></TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Requires both modified_after and modified_before dates. At each loop, shift this interval until 'now'</i></div></TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD># of threads</TD>
+      <TD><input type="number" min=1 id="baw_thread_count" name="baw_thread_count" size="40" value="{{ config.BAW.thread_count }}"></TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Number of threads for the extraction</i></div></TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD>Create a CSV at each loop </TD>
+      <TD>
+          <input type="checkbox" id="baw_csv_at_each_loop" name="baw_csv_at_each_loop" {{ baw_csv_at_each_loop }}>
+      </TD>
+      <TD>
+          <div style="color:#797676" class="bx--form__helper-text"><i>A CSV is generated at each loop. Otherwise only when +500k events are extracted</i>
+          </div>
+      </TD>
+  </TR>
+    </table>

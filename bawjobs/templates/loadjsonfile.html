@@ -1,0 +1,61 @@
+{% csrf_token %}
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Automation Worflow - Process Mining Accelerator</title>
+  <link href='https://fonts.googleapis.com/css?family=IBM Plex Sans' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'IBM Plex Sans';
+      font-size: 22px;
+    }
+
+    .btn_mod {
+      border: none;
+      background-color: inherit;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: #eee;
+    }
+  
+
+    .black {
+      color: rgb(3, 3, 3);
+    }
+
+    .blue {
+      color: rgb(13, 93, 173);
+    }
+    .bx--form__helper-text {
+      font-size: 14px;
+    }
+
+
+
+  </style>
+</head>
+<form action="recordjsonfile/" method="post">
+{% csrf_token %}
+<hr>
+<p>
+  <ul>
+    <li>Select an extraction configuration file in the config/ directory. </li>
+      <li>A new entry is created in the Web UI that you can edit and run.</li>
+<li>The configuration file must be in the config/ directory, and must be in the expected job format.</li>
+</ul>
+</p>
+JSONFILENAME : <input type="file" name="jsonfile" id="jsonfile" size="30" value="" required></TD>
+<hr>
+<input type="submit" value="Submit"></form>
+</html>

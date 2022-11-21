@@ -18,8 +18,8 @@ This is a no-code accelerator that can be used by process owners and analysts wh
 - Connect to the BAW server
 - Select the BAW process to mine
 - Optionnaly connect to the IPM server to automatically load the event log into a process mining project
-- Optionnaly set an udate rate (in seconds) to extract new data regularly
-- Optionnaly set an extraction period in days to fraction the extraction workload
+- Optionnaly set an loop rate (in seconds) to extract new data regularly
+- Optionnaly set an instance limit with a loop rate to fraction the extraction into smaller pieces and reduce the RAM and the impact on BAW.
 - Optionnaly exclude some BAW data
 - Run several extraction jobs that can be stopped and resumed.
 
@@ -77,18 +77,17 @@ The Web UI enables:
 - Creating a new extraction configuration 
 - Editing an existing configuration
 - Copying a new extraction configuration from an existing one (time saving)
+- Loading an existing configuration file
 - Deleting a configuration. Note that the json file is not deleted, the entry in the application DB is deleted.
-
-## BAW connection and password
-The BAW connection requires a root URL, a user ID, and a password.
 
 
 ## Running an extraction job
 Before running an extraction job, you can set some running parameters
-- Extraction loop rate defines the pause time between each extraction. The JSON file enables entering any value as seconds. When the job includes a loop rate, the last extraction period is saved such that restarting the job does not extract the same data again.
-- Extraction interval is expressed as days. This value specifies a time window for which we want to extract BAW data. For example if the extraction interval is 1 day, at each loop we will extract 1 day of data, and the time window is shifted for the next loop. An extraction loop rate and a modified_after date are required to use this feature. Extraction interval can be used to lower the load on the BAW server and the RAM needed.
+- Extraction loop rate defines the pause time between each extraction. You can enter a duration between 1 second and 24 hours. The JSON file enables entering any value as seconds. When the job includes a loop rate, the last extraction period is saved such that restarting the job does not extract the same data again.
 - Number of threads increases the speed by splitting the extraction work into several threads. This increase the load on the BAW server too. A good balance needs to be found.
-- Instance limit is used for testing only: each extraction stops when the number of instance specified here is reached. This is useful when sizing the time required to get historical data, or the load on the BAW server or on the RAM
+- Instance limit with loop_rate=0 is used for testing only: each extraction stops when the number of instance specified here is reached. This is useful when sizing the time required to get historical data, or the load on the BAW server or on the RAM
+- Instance limit with loop_rate>=0 is used fraction the extraction steps in order to save RAM and to reduce impact on BAW. 
+- Interval auto shift is used with a time interval [modified_after, modified_before], a loop rate, and optionally an instance_limit. The extraction starts with the initial interval, then shift the interval for another extraction. This can be useful to fragment the extraction when the data in the database is huge.
 - Create a CSV at each loop generates a CSV file at each extraction loop (if events were retrieved). When unchecked, the CSV file is generated when the job is completed, stopped, or when the number of events reaches 500k events (the value can be changed in a code variable)
 
 - A job can be stopped if it is looping. The stop is taken into consideration while the job is sleeping.
@@ -98,9 +97,90 @@ Running a job without the WebUI is straightforward, and this way it can be sched
 ```
 python3 BAW_to_IMP.py config/config_myJobName.json
 ```
+## Main extraction scenarios
+The configuration directory includes several extraction examples for the main use cases
+### Historical Basic
+- Loop rate = 0
+- instance limit = 0
+- modified before = "2022-10-01T00:00:00Z"
+- (optional) modified_after = "2022-09-01T00:00:00Z"
+- (optional) number of threads = 5
+- Interval auto shift = false
+- Create CSV at each loop = false
+
+The job is executed once and ends-up delivering a CSV file.
+
+```CAUTIOUS```: the extraction can be very long. It can decrease the performance BAW and can request a huge RAM.
+We recommend to use this only if you know that the extracted volume is reasonable.
+
+
+### Historical Instance Limit
+- Loop rate = 6 sec
+- instance_limit = 50
+- modified before = "2022-10-01T00:00:00Z"
+- (optional) modified_after = "2022-11-21T00:00:00Z"
+- (optional) number of threads = 5
+- (optional) generate CSV at each loop = false
+- Create CSV at each loop = false
+
+During the first extraction loop, the job fetches all the instances that match the dates. But instead of getting the details of the tasks for each instance in one shot (this is the most consumming task), it get the task details for the first 50 instances, sleeps for 6 seconds, and continue getting the task details for the next 50 instance, and so forth until the instance list is completely processed.
+
+Optionnaly we can generate a CSV file at each loop, and therefore keeping the RAM low. Without checking this option, a CSV file is generated each time we exceed 500k events (default). This threshold can be changed in the configuration file with 'event_number_csv_trigger'
+
+This is the recommended approach for extracting historical data.
+
+### Historical Interval Shifting
+- Loop rate = 5 seconds
+- modified before = "2022-10-01T00:00:00Z"
+- modified after = "2022-09-01T00:00:00Z"
+- instance_limit = 0
+- (optional) number of threads = 5
+- (optional) generate CSV at each loop = false
+- Create CSV at each loop = false
+
+This job starts extracting 1 month of data from modified after date (Sept 1, 2022), sleeps for 60 seconds, extracts the next month, and so forth until modified_before is reached.
+
+This scenario is interesting to lower the impact on the RAM and on the BAW server. It is less predictable as the scenario that limits the number of instances. But it can be interesting to generate a CSV each day or each month.
+
+It can be combined with an instance_limit
+
+### Historical Interval Shifting Instance Limit
+- Loop rate = 5 seconds
+- modified before = "2022-10-01T00:00:00Z"
+- modified after = "2022-09-01T00:00:00Z"
+- instance_limit = 30
+- (optional) number of threads = 5
+- (optional) generate CSV at each loop = false
+- Create CSV at each loop = false
+
+Same as above, but each 'month' extraction is possibly fragmented in packs of 30 instances.
+
+### Performance Sizing
+- Loop rate = 0
+- instance_limit = 1000
+- (optional) modified before = "2022-10-01T00:00:00Z"
+- (optional) modified after = "2022-09-01T00:00:00Z"
+- (optional) number of threads = 5
+
+The job extracts a maximum of 1000 instances as well as the task details. Then it generates the CSV.
+We can't predict which instances are retrieved, therefore this is restricted to experimenting the performance before using another scenario 
+
+### Monitor New Events
+- Loop rate = 10 minutes
+- generate CSV at each loop = true
+- instance limit = 0
+- modified after = "2022-11-21T00:00:00Z"
+- (optional) number of threads = 5
+
+The extraction job fetches new changes in BAW since "2022-11-21T00:00:00ZZ". If you first extracted historical data, the job kept the last extraction date in the field 'last before'. You should copy this date and use it as 'modified after' date for the near-real-time job.
+
+Then the job sleeps for 10 minutes, and retry getting new events, and so forth.
+
+A CSV file is generated at each loop. If a Process Mining configuration is set, the CSV is uploaded automatically such that new data is usable in process mining.
+
 
 ## Configuring the accelerator for BAW
-The accelerator settings are managed in a form opened at `http://127.0.0.1:8000/`
+The accelerator settings are managed in a form opened at `http://127.0.0.1:8000/bawjobs` 
 
 You can use the accelerator to fetch the data from BAW and store the resulting CSV file in your local directory. You will then be able to load manually the CSV file into IBM Process Mining. In this case, you only need to have:
 - IBM BAW admin login and password
@@ -238,7 +318,6 @@ Note how the BAW business data are implemented in JSON.
 {
     "JOB": {
         "job_name": "CREATED",
-        "update_rate": 0,
         "exit": 0
     },
     "BAW": {
@@ -250,13 +329,13 @@ Note how the BAW business data are implemented in JSON.
         "process_name": "process",
         "modified_after": "",
         "modified_before": "",
-        "extraction_interval": 0,
+        "loop_rate": 0,
+        "interval_shift": false,
         "thread_count": 1,
-        "instance_limit": -1,
+        "instance_limit": 0,
         "task_data_variables": [],
         "export_exposed_variables": false,
         "csv_at_each_loop": false,
-        "last_after": "",
         "last_before": ""
     },
     "IPM": {

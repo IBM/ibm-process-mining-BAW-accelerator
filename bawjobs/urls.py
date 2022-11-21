@@ -14,4 +14,7 @@ urlpatterns = [
     path('createjob/addjob/', views.addjob, name='addjob'),
     path('copy/<int:id>', views.copy, name='copy'),
     path('copy/addjob/', views.addjob, name='addjob'),
+    path('loadjsonfile/', views.loadjsonfile, name='loadjsonfile'),
+    path('loadjsonfile/recordjsonfile/', views.recordjsonfile, name='recordjsonfile'),
+
 ]

@@ -15,7 +15,6 @@ def getDefaultConfig():
     return {
         "JOB": {
             "job_name": "",
-            "update_rate": 0,
             "exit": 0
         },
         "BAW": {
@@ -27,14 +26,15 @@ def getDefaultConfig():
             "process_name": "",
             "modified_after": "",
             "modified_before": "",
-            "extraction_interval": 0,
+            "loop_rate": 0,
+            "interval_shift": False,
             "thread_count": 1,
             "instance_limit": -1,
             "task_data_variables": [],
             "export_exposed_variables": False,
             "csv_at_each_loop": False,
-            "last_after": "",
-            "last_before": ""
+            "event_number_csv_trigger": 500000,
+            "last_before": "",
         },
         "IPM": {
             "url": "",
@@ -78,17 +78,16 @@ def get_values_from_webUI(request, config):
     # the function does nothing if the key is not in request.POST
     convert_date(request, config, 'baw_modified_before', 'modified_before')
     convert_date(request, config, 'baw_modified_after', 'modified_after')
-    convert_date(request, config, 'baw_last_after', 'last_after')
     convert_date(request, config, 'baw_last_before', 'last_before')
 
-    # baw_update_rate is a string returned by a input of type time. Convert into seconds
-    if('baw_update_rate' in request.POST):
-        if request.POST['baw_update_rate'] == "":
-            config['JOB']['update_rate'] = 0
+    # baw_loop_rate is a string returned by a input of type time. Convert into seconds
+    if('baw_loop_rate' in request.POST):
+        if request.POST['baw_loop_rate'] == "":
+            config['BAW']['loop_rate'] = 0
         else:
-            x = request.POST['baw_update_rate'].split(':') # value could be "00:00:00"
-            if len(x)==2: config['JOB']['update_rate'] = 0
-            else: config['JOB']['update_rate'] = 3600 * int(x[0]) + 60 * int(x[1]) + int(x[2])
+            x = request.POST['baw_loop_rate'].split(':') # value could be "00:00:00"
+            if len(x)==2: config['BAW']['loop_rate'] = 0
+            else: config['BAW']['loop_rate'] = 3600 * int(x[0]) + 60 * int(x[1]) + int(x[2])
 
     if ('baw_extraction_interval' in request.POST):
         config['BAW']['extraction_interval'] = int(request.POST['baw_extraction_interval'])
@@ -125,6 +124,14 @@ def get_values_from_webUI(request, config):
             config['BAW']['csv_at_each_loop'] = True
         else:
             config['BAW']['csv_at_each_loop'] = False
+
+    if 'baw_interval_shift' in request.POST:
+        # means that the check box is on
+        if (request.POST['baw_interval_shift'] == 'on'):
+            config['BAW']['interval_shift'] = True
+        else:
+            config['BAW']['interval_shift'] = False
+
 
     if 'job_name' in request.POST:
         config['JOB']['job_name'] = request.POST['job_name']
@@ -163,11 +170,6 @@ def set_context_from_config(config):
         baw_modified_before = ""
 
         # data from previous run
-    if (config['BAW']['last_after'] != ""):
-        baw_last_after = config['BAW']['last_after'][:-1]
-    else:
-        baw_last_after = ""
-
     if (config['BAW']['last_before'] != ""):
         baw_last_before = config['BAW']['last_before'][:-1]
     else:
@@ -188,15 +190,20 @@ def set_context_from_config(config):
         version1130 = "selected"
     
     # update rate is now set with a time widget. Transform seconds in json file into HH:MM:SS
-    update_rate = config['JOB']['update_rate']
-    m, s = divmod(update_rate, 60)
+    loop_rate = config['BAW']['loop_rate']
+    m, s = divmod(loop_rate, 60)
     h, m = divmod(m, 60)
-    baw_update_rate = f'{h:02d}:{m:02d}:{s:02d}'
+    baw_loop_rate = f'{h:02d}:{m:02d}:{s:02d}'
 
     # export_exposed_variables is true set the checkbox to on
     if (config['BAW']['export_exposed_variables'] == True):
         baw_exposed_variables = 'checked'
     else: baw_exposed_variables = ''
+
+    # interval_shift is true set the checkbox to on
+    if (config['BAW']['interval_shift'] == True):
+        baw_interval_shift = 'checked'
+    else: baw_interval_shift = ''
 
     # csv at each loop
     if (config['BAW']['csv_at_each_loop'] == True):
@@ -207,14 +214,14 @@ def set_context_from_config(config):
         'config': config,
         'baw_modified_after' : baw_modified_after,
         'baw_modified_before': baw_modified_before,
-        'baw_last_after' : baw_last_after,
         'baw_last_before' : baw_last_before,
         'baw_task_data_variables' : task_data_variables,
         'imp_selected_version1131' : version1131,
         'ipm_selected_version1130': version1130,
-        'baw_update_rate': baw_update_rate,
+        'baw_loop_rate': baw_loop_rate,
         'baw_exposed_variables': baw_exposed_variables,
-        'baw_csv_at_each_loop': baw_csv_at_each_loop
+        'baw_csv_at_each_loop': baw_csv_at_each_loop,
+        'baw_interval_shift': baw_interval_shift
     }
     return context
 
@@ -311,10 +318,8 @@ def savejob(request, id):
     bawjob.project = config['BAW']['project']
     bawjob.process_name = config['BAW']['process_name']
     bawjob.ipm_url = config['IPM']['url']
-    bawjob.ipm_project_name = config['IPM']['project_name']
     bawjob.ipm_project_key = config['IPM']['project_key']
 
-    print(bawjob.process_name)
     # save
     bawjob.save()
 
@@ -354,7 +359,6 @@ def initextraction(request, id):
     return HttpResponse(template.render(context, request))
 
 def startextraction(request, id):
-    print("start extraction")
     Bawjob = Bawjobs.objects.get(id=id)
     job_name = Bawjob.job_name
 
@@ -381,7 +385,6 @@ def startextraction(request, id):
     return HttpResponse(template.render(context, request))
 
 def stopextraction(request, id):
-    print('stop extraction')
     Bawjob = Bawjobs.objects.get(id=id)
     job_name = Bawjob.job_name
     # Load config file
@@ -407,3 +410,31 @@ def stopextraction(request, id):
 def extractioncomplete(request,id):
     return render(request, "extractioncomplete.html")
 
+def loadjsonfile(request):
+    template = loader.get_template('loadjsonfile.html')
+    # init the web UI with a default configuration such that each field has a correct value
+    config = getDefaultConfig()
+
+    context = set_context_from_config(config)
+    return HttpResponse(template.render(context, request))
+
+def recordjsonfile(request):
+
+    filename = "config/"+request.POST['jsonfile']
+    print("Load filename : %s" % filename)
+    file = open(filename, 'r')
+    config = json.load(file)
+    file.close()
+
+    # When everything is done, save the job in the Django DB
+    newjob = Bawjobs(
+        job_name = config['JOB']['job_name'],
+        root_url = config['BAW']['root_url'],
+        project = config['BAW']['project'],
+        process_name = config['BAW']['process_name'],
+        ipm_url = config['IPM']['url'],
+        ipm_project_key = config['IPM']['project_key']
+    )
+    newjob.save()
+    
+    return HttpResponseRedirect(reverse('index'))

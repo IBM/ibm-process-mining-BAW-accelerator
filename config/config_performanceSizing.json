@@ -1,0 +1,36 @@
+{
+    "JOB": {
+        "job_name": "PerformanceSizing",
+        "exit": 0
+    },
+    "BAW": {
+        "root_url": "https://9.172.229.85:9443/",
+        "user": "admin",
+        "password": "admin",
+        "password_env_var": "",
+        "project": "HSS",
+        "process_name": "Standard HR Open New Position",
+        "modified_after": "2022-10-01T00:00:00Z",
+        "modified_before": "2022-11-01T00:00:00Z",
+        "loop_rate": 0,
+        "interval_shift": false,
+        "thread_count": 5,
+        "instance_limit": 10,
+        "task_data_variables": [
+            "requisition.gmApproval",
+            "requisition.requester"
+        ],
+        "export_exposed_variables": false,
+        "csv_at_each_loop": false,
+        "event_number_csv_trigger": 500000,
+        "last_before": ""
+    },
+    "IPM": {
+        "url": "https://pharoses1.fyre.ibm.com",
+        "user_id": "task.miner",
+        "api_key": "8a5kga87eqvd1180",
+        "org_key": "ca2b2685",
+        "project_key": "newbawextract",
+        "version": "1.13.1+"
+    }
+}
