@@ -1,6 +1,8 @@
 # Accelerator for IBM Business Automation Workflow and IBM Process Mining
 ## NOTE
 To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
+https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
+
 
 ## Introduction
 This repository is a free contribution provided as-is to easily connect IBM Business Automation Workflow and IBM Process Mining.
@@ -44,7 +46,9 @@ You can generate a Django key from this site: https://djecrety.ir/
 
 
 Contact Patrick Megard to get access to the libraries contained in this github repo:
-https://github.com/Patrick-Megard/ibm-process-mining-connectors-utilsWhen you get access, download the zip file, and uncompress it.
+https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
+
+When you get access, download the zip file, and uncompress it.
 
 You will obtain a folder called ```ibm-process-mining-connectors-utils-main```
 Copy all the files that are in this folder into the ibm-process-mining-BAW-accelerator
