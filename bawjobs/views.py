@@ -26,14 +26,17 @@ def getDefaultConfig():
             "process_name": "",
             "modified_after": "",
             "modified_before": "",
+            "paging_size": 0,
+            "exclude_running_cases": False,
             "loop_rate": 0,
             "interval_shift": False,
+            "interval_shift_until": "",
             "thread_count": 1,
-            "instance_limit": -1,
+            "instance_limit": 0,
             "task_data_variables": [],
             "export_exposed_variables": False,
             "csv_at_each_loop": False,
-            "event_number_csv_trigger": 500000,
+            "trigger_csv_beyond": 500000,
             "last_before": "",
         },
         "IPM": {
@@ -79,6 +82,7 @@ def get_values_from_webUI(request, config):
     convert_date(request, config, 'baw_modified_before', 'modified_before')
     convert_date(request, config, 'baw_modified_after', 'modified_after')
     convert_date(request, config, 'baw_last_before', 'last_before')
+    convert_date(request, config, 'baw_interval_shift_until', 'interval_shift_until')
 
     # baw_loop_rate is a string returned by a input of type time. Convert into seconds
     if('baw_loop_rate' in request.POST):
@@ -98,6 +102,12 @@ def get_values_from_webUI(request, config):
     if ('baw_instance_limit' in request.POST):
         config['BAW']['instance_limit'] = int(request.POST['baw_instance_limit'])
 
+    if ('baw_paging_size' in request.POST):
+        config['BAW']['paging_size'] = int(request.POST['baw_paging_size'])
+
+    if ('baw_trigger_csv_beyond' in request.POST):
+        config['BAW']['trigger_csv_beyond'] = int(request.POST['baw_trigger_csv_beyond'])
+
     if ('baw_task_data_variables' in request.POST):
         if (request.POST['baw_task_data_variables'] == ""):
             config['BAW']['task_data_variables'] = []
@@ -113,24 +123,27 @@ def get_values_from_webUI(request, config):
     # check box
     if 'baw_export_exposed_variables' in request.POST:
         # means that the check box is on
-        if (request.POST['baw_export_exposed_variables'] == 'on'):
-            config['BAW']['export_exposed_variables'] = True
-        else:
-            config['BAW']['export_exposed_variables'] = False
+        config['BAW']['export_exposed_variables'] = True
+    else:
+        config['BAW']['export_exposed_variables'] = False
+
+    if 'baw_exclude_running_cases' in request.POST:
+        # means that the check box is on
+        config['BAW']['exclude_running_cases'] = True
+    else:
+        config['BAW']['exclude_running_cases'] = False
 
     if 'baw_csv_at_each_loop' in request.POST:
-        # means that the check box is on
-        if (request.POST['baw_csv_at_each_loop'] == 'on'):
-            config['BAW']['csv_at_each_loop'] = True
-        else:
-            config['BAW']['csv_at_each_loop'] = False
+        # means that the check box is checked
+        config['BAW']['csv_at_each_loop'] = True
+    else:
+        config['BAW']['csv_at_each_loop'] = False
 
     if 'baw_interval_shift' in request.POST:
-        # means that the check box is on
-        if (request.POST['baw_interval_shift'] == 'on'):
-            config['BAW']['interval_shift'] = True
-        else:
-            config['BAW']['interval_shift'] = False
+        # means that the widget is checked
+        config['BAW']['interval_shift'] = True
+    else:
+        config['BAW']['interval_shift'] = False
 
 
     if 'job_name' in request.POST:
@@ -203,12 +216,26 @@ def set_context_from_config(config):
     # interval_shift is true set the checkbox to on
     if (config['BAW']['interval_shift'] == True):
         baw_interval_shift = 'checked'
-    else: baw_interval_shift = ''
+        baw_interval_shift_until_disabled = ''
+    else: 
+        baw_interval_shift = ''
+        baw_interval_shift_until_disabled = 'disabled'
+
+    # interval_shift_until date
+    if (config['BAW']['interval_shift_until'] != ""):
+        baw_interval_shift_until= config['BAW']['interval_shift_until'][:-1]
+    else:
+        baw_interval_shift_until = ""
 
     # csv at each loop
     if (config['BAW']['csv_at_each_loop'] == True):
         baw_csv_at_each_loop = 'checked'
     else: baw_csv_at_each_loop = ''
+
+    # exclude running cases
+    if (config['BAW']['exclude_running_cases'] == True):
+        baw_exclude_running_cases = 'checked'
+    else: baw_exclude_running_cases = ''
 
     context = {
         'config': config,
@@ -221,7 +248,10 @@ def set_context_from_config(config):
         'baw_loop_rate': baw_loop_rate,
         'baw_exposed_variables': baw_exposed_variables,
         'baw_csv_at_each_loop': baw_csv_at_each_loop,
-        'baw_interval_shift': baw_interval_shift
+        'baw_interval_shift': baw_interval_shift, 
+        'baw_interval_shift_until': baw_interval_shift_until,
+        'baw_interval_shift_until_disabled': baw_interval_shift_until_disabled,
+        'baw_exclude_running_cases': baw_exclude_running_cases
     }
     return context
 

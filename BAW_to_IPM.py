@@ -30,10 +30,13 @@ def  config_with_loop_and_interval_shift(now, config):
         config['BAW']['modified_after'] = config['BAW']['last_before']
         before = last_before + duration
         config['BAW']['modified_before'] = before.strftime("%Y-%m-%dT%H:%M:%SZ")
-        # stop when modified_before >= now
-        if (before >= now):
-            config['BAW']['modified_before'] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-            config['JOB']['exit'] = 1
+        if (config['BAW']['interval_shift_until'] != ""):
+            shift_until = datetime.strptime(config['BAW']['interval_shift_until'], "%Y-%m-%dT%H:%M:%SZ")
+        else:
+            shift_until = now
+        # stop when modified_before >= now or when modified_before >= interval_shift_until
+        if (before >= shift_until):
+            config['BAW']['modified_before'] = shift_until.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def config_for_near_real_time_update(now, config):
     # loop to get new data. 'modified_after' can be set, 'modified_before' must be """, executed with now
@@ -43,7 +46,7 @@ def config_for_near_real_time_update(now, config):
         # next loop start at last_before
         config['BAW']['modified_after'] = config['BAW']['last_before']
 
-def config_for_instance_limit(now, instance_list, config):
+def config_for_paging(now, instance_list, config):
     if (instance_list == []):
         # get instances, modified_after and modified_before are optional
         if (config['BAW']['modified_before'] == ""):
@@ -54,40 +57,57 @@ def config_for_instance_limit(now, instance_list, config):
     else:
         # next loops where we continue processing the instance_list, without fetching instances from BAW: keep same dates as before. 
         config['BAW']['modified_before'] = config['BAW']['last_before']
-        if (instance_list is not None and len(instance_list) <= config['BAW']['instance_limit']):
-            #if instance_list size < instance_limit, that's the last loop, exit if modified_before is set
+        if (instance_list is not None and len(instance_list) <= config['BAW']['paging_size']):
+            #if instance_list size < paging_size, that's the last loop, exit if modified_before is set
             if (config['BAW']['modified_before'] != "") and config['BAW']['interval_shift'] != True:
                 # We stop when we are done, except is interval_shift is true, in which case we should continue until now
-                print("config_with_loop_and_instance_limit: last extraction before exit %s" % len(instance_list))
+                print("config_with_loop_and_paging: last extraction before exit %s" % len(instance_list))
                 config['JOB']['exit'] = 1
 
 def run_extraction(now, instance_list, event_data, config, logger):
-    # run_config is what is being used at each execution
     # BAW auth
-    # run_config['BAW']['auth_data'] = get_BAW_auth(config['BAW'], logger)
     config['BAW']['auth_data'] = get_BAW_auth(config['BAW'], logger)
     modified_after_orig = config['BAW']['modified_after']
     modified_before_orig = config['BAW']['modified_before']
-
-    # loop_rate : different scenarios depending on the config parameters
-    if config['BAW']['loop_rate'] != 0 :
-        if config['BAW']['interval_shift'] == True:
-            # there must be an interval, and we shift it at each loop
-            if config['BAW']['modified_after'] == "" or config['BAW']['modified_before'] == "":
-                print("Error: Modified After date is required for loops with an extraction interval")
-                config['JOB']['exit'] = 1
-                return [], []
-            else:
-                config_with_loop_and_interval_shift(now, config)        
-        elif config['BAW']['instance_limit'] == 0 and config['BAW']['modified_before'] == "":
-            config_for_near_real_time_update(now, config)
-        if config['BAW']['instance_limit'] > 0:
-            config_for_instance_limit(now, instance_list, config)
+    # if instance_list not empty and paging, we are paging. ignore the rest
+    if len(instance_list) > 0 and config['BAW']['paging_size'] > 0 :
+        print("Paging from last extraction")
+    else:
+        # loop_rate : different scenarios depending on the config parameters
+        if config['BAW']['loop_rate'] != 0 :
+            if config['BAW']['interval_shift'] == True:
+                # there must be an interval, and we shift it at each loop
+                if config['BAW']['modified_after'] == "" or config['BAW']['modified_before'] == "":
+                    print("Error: Modified After date is required for loops with an extraction interval")
+                    config['JOB']['exit'] = 1
+                    return [], []
+                else:
+                    config_with_loop_and_interval_shift(now, config)        
+            elif config['BAW']['modified_before'] == "":
+                config_for_near_real_time_update(now, config)
     
     instance_list = baw.extract_baw_data(instance_list, event_data, config['BAW'], logger)
 
     # Remember what was the last extraction, such that we don't get the same data again during the next loop
     config['BAW']['last_before'] = config['BAW']['modified_before']
+
+    # Decide if the job should exit or not or continue looping
+    if config['BAW']['loop_rate'] != 0 and instance_list == []:
+        # no more paging needed
+        if config['BAW']['interval_shift'] == True:
+            # Reset the configuration of the last extraction to decide if we should stop or not
+            # if there is a shift_interval_until date and last_before >= we stop
+            if (config['BAW']['interval_shift_until'] != ""):
+                shift_until = datetime.strptime(config['BAW']['interval_shift_until'], "%Y-%m-%dT%H:%M:%SZ")
+            last_before = datetime.strptime(config['BAW']['last_before'], "%Y-%m-%dT%H:%M:%SZ")
+            if (last_before >= shift_until):
+                config['JOB']['exit'] = 1
+        elif modified_before_orig != "" :
+            # we have to stop if the last extraction reached this date
+            if modified_before_orig == config['BAW']['last_before']:
+                print("exiting")
+                config['JOB']['exit'] = 1 
+
     # Bring back original data in config such that it can be saved at the end of the loop without loosing the original intent
     config['BAW'].pop('auth_data')
     config['BAW']['modified_after'] = modified_after_orig
@@ -170,7 +190,8 @@ def upload_csv(config, logger):
 
 def main(argv):
     #debug
-    if (argv == []) : argv=["","config/config_newBAWextract.json"]
+    print("argv %s" % argv)
+    if (len(argv) ==1 ) : argv.append("config/config_Pat_HistoricalBasic.json")
     if (len(argv) == 1) :
         print("configuration file required")
         return
@@ -222,10 +243,10 @@ def main(argv):
 
         if (event_data != []) :
             if ((config['JOB']['exit'] == 1) or 
-            (len(event_data) >= config['BAW']['event_number_csv_trigger']) or
+            (len(event_data) >= config['BAW']['trigger_csv_beyond']) or
             config['BAW']['csv_at_each_loop'] == True):
                 # exit == 1 if job stopped, or modified_before date is reached, or update_loop==0
-                # event_number_csv_trigger only for historical with interval period. To be set before
+                # trigger_csv_beyond only for historical with interval period. To be set before
                 csvzipfilepath = generate_csv(event_data, config)
                 # re-initialize event_data
                 event_data = []

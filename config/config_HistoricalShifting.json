@@ -1,6 +1,6 @@
 {
     "JOB": {
-        "job_name": "HistoricalBasic",
+        "job_name": "HistoricalShifting",
         "exit": 0
     },
     "BAW": {
@@ -14,9 +14,9 @@
         "modified_before": "2022-11-01T00:00:00Z",
         "paging_size": 0,
         "exclude_running_cases": false,
-        "loop_rate": 0,
-        "interval_shift": false,
-        "interval_shift_until": "",
+        "loop_rate": 5,
+        "interval_shift": true,
+        "interval_shift_until": "2022-11-22T22:16:40Z",
         "thread_count": 5,
         "instance_limit": 0,
         "task_data_variables": [
@@ -26,12 +26,12 @@
         "export_exposed_variables": false,
         "csv_at_each_loop": false,
         "trigger_csv_beyond": 500000,
-        "last_before": ""
+        "last_before": "2022-11-22T22:16:40Z"
     },
     "IPM": {
         "url": "https://processmining.com",
         "user_id": "task.miner",
-        "api_key": "apikey",
+        "api_key": "8a5kga87eqvd1180",
         "org_key": "ca2b2685",
         "project_key": "newbawextract",
         "version": "1.13.1+"

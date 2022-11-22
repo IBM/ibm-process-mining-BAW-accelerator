@@ -1,6 +1,6 @@
 {
     "JOB": {
-        "job_name": "HistoricalBasic",
+        "job_name": "Monitoring",
         "exit": 0
     },
     "BAW": {
@@ -11,10 +11,10 @@
         "project": "HSS",
         "process_name": "Standard HR Open New Position",
         "modified_after": "2022-10-08T00:00:00Z",
-        "modified_before": "2022-11-01T00:00:00Z",
+        "modified_before": "",
         "paging_size": 0,
         "exclude_running_cases": false,
-        "loop_rate": 0,
+        "loop_rate": 5,
         "interval_shift": false,
         "interval_shift_until": "",
         "thread_count": 5,
@@ -24,7 +24,7 @@
             "requisition.requester"
         ],
         "export_exposed_variables": false,
-        "csv_at_each_loop": false,
+        "csv_at_each_loop": true,
         "trigger_csv_beyond": 500000,
         "last_before": ""
     },

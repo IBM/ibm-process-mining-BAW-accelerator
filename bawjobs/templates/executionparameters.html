@@ -1,4 +1,27 @@
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript">
 
+    function check_dates_are_set() {
+
+        if (document.getElementById('baw_modified_after').value == "" || document.getElementById('baw_modified_before').value == "" ||
+        document.getElementById('baw_interval_shift_until').value == "" )
+            alert('Modified after, modified before, and shift until dates are required to extract data with intervals')
+        if (document.getElementById('baw_loop_rate').value == "00:00:00" || document.getElementById('baw_loop_rate').value == "00:00")
+            alert('Loop rate is required for interval shifting')
+        if (document.getElementById('baw_interval_shift').checked == true)
+
+            document.getElementById('baw_interval_shift_until').disabled = false;
+        else 
+            document.getElementById('baw_interval_shift_until').disabled = true;
+    }
+
+    function check_loop_rate(){
+
+      if (document.getElementById('baw_loop_rate').value == "00:00:00" || document.getElementById('baw_loop_rate').value == "00:00")
+            alert('Loop rate is required for paging')
+    }
+    
+</script>
 <table style="width:950px">
     <TR>
       <TD style="width:50px"></TD>
@@ -38,20 +61,28 @@
     </TR>
     <TR>
       <TD></TD>
+      <TD>Paging size (# instances)</TD>
+      <TD><input type="number" min=0 vid="baw_paging_size" name="baw_paging_size" size="40" value="{{ config.BAW.paging_size }}" onchange="check_loop_rate()"></TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Paging: number of instances processed at each loop</TR>
+    <TR>
+    <TR>
+      <TD></TD>
       <TD># instance limit</TD>
       <TD><input type="number" min=0 vid="baw_instance_limit" name="baw_instance_limit" size="40" value="{{ config.BAW.instance_limit }}"></TD>
-      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Use to experiment the job (no loop_rate) or reduce workload (with loop_rate). 0: unlimited</i></div></TD>
-    </TR>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Used for sizing experiments only</TR>
     <TR>
       <TD></TD>
       <TD>Interval auto shift</TD>
-      <TD><input type="checkbox" id="baw_interval_shift" name="baw_interval_shift" {{ baw_interval_shift }} onchange="check_dates_are_set()"></TD>
-      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Requires both modified_after and modified_before dates. At each loop, shift this interval until 'now'</i></div></TD>
+      <TD><input type="checkbox" id="baw_interval_shift" name="baw_interval_shift" {{ baw_interval_shift }} onchange="check_dates_are_set()">
+        Until <input type="datetime-local" step=1 id="baw_interval_shift_until" name="baw_interval_shift_until" size="40" value="{{ baw_interval_shift_until }}" {{ baw_interval_shift_until_disabled }}>
+      </TD>
+      <TD><div style="color:#797676" class="bx--form__helper-text"><i>Requires both modified_after and modified_before dates. At each loop, shift this interval until this date</i></div></TD>
     </TR>
     <TR>
       <TD></TD>
       <TD># of threads</TD>
-      <TD><input type="number" min=1 id="baw_thread_count" name="baw_thread_count" size="40" value="{{ config.BAW.thread_count }}"></TD>
+      <TD><input type="number" min=1 id="baw_thread_count" name="baw_thread_count" size="40" value="{{ config.BAW.thread_count }}">
+      </TD>
       <TD><div style="color:#797676" class="bx--form__helper-text"><i>Number of threads for the extraction</i></div></TD>
     </TR>
     <TR>
@@ -65,4 +96,15 @@
           </div>
       </TD>
   </TR>
+  <TR>
+    <TD></TD>
+    <TD>Generate CSV beyond </TD>
+    <TD>
+        <input type="number" id="baw_trigger_csv_beyond" name="baw_trigger_csv_beyond" value="{{ config.BAW.trigger_csv_beyond  }}"> events
+    </TD>
+    <TD>
+        <div style="color:#797676" class="bx--form__helper-text"><i>A CSV is generated +500k events are extracted</i>
+        </div>
+    </TD>
+</TR>
     </table>

@@ -2,8 +2,13 @@
 <script type="text/javascript">
 
     function check_dates_are_set() {
+
         if (document.getElementById('baw_modified_after').value == "" || document.getElementById('baw_modified_before').value == "")
             alert('Modified after and modified before dates are required to extract data with intervals')
+        if (document.getElementById('baw_interval_shift').checked == true)
+            document.getElementById('baw_interval_shift_until').disabled = false;
+        else 
+            document.getElementById('baw_interval_shift_until').disabled = true;
     }
 
     
@@ -192,6 +197,17 @@
         <TD>
             <div style="color:#797676" class="bx--form__helper-text"><i>Exposed process variables are exported
                     automatically</i>
+            </div>
+        </TD>
+    </TR>
+    <TR>
+        <TD></TD>
+        <TD>Exclude running cases: </TD>
+        <TD>
+            <input type="checkbox" id="baw_exclude_running_cases" name="baw_exclude_running_cases" {{ baw_exclude_running_cases }}>
+        </TD>
+        <TD>
+            <div style="color:#797676" class="bx--form__helper-text"><i>Only export completed cases</i>
             </div>
         </TD>
     </TR>

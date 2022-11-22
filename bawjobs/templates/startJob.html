@@ -3,18 +3,10 @@
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script type="text/javascript">
 
-  function check_loop_rate_is_set(){
-    // Actually we can use extraction interval (in days) without a loop, to test
-    if (document.getElementById('baw_loop_rate').value == "00:00")
-      alert('Without an loop rate, you will only extract one period of time')
-    if (document.getElementById('baw_modified_after_date').value == "")
-      alert('Modified after date is required before setting the extraction interval')
-  }
-
-  function stopExtraction(jobid){
+  function stopExtraction(jobid) {
     // call a python function to set the JOB.exit value to 1
     // only works if there is a loop to catch the value when the job is sleeping...
-    execute_python('stopextraction/'+jobid)
+    execute_python('stopextraction/' + jobid)
   }
 
   function execute_python(url, data) {
@@ -63,104 +55,103 @@
     .blue {
       color: rgb(13, 93, 173);
     }
-    
-/*
+
+    /*
  CSS for the main interaction
 */
-.accordion > input[type="checkbox"] {
-  position: absolute;
-  left: -100vw;
-}
+    .accordion>input[type="checkbox"] {
+      position: absolute;
+      left: -100vw;
+    }
 
-.accordion .content {
-  overflow-y: hidden;
-  height: 0;
-  transition: height 0.3s ease;
-}
+    .accordion .content {
+      overflow-y: hidden;
+      height: 0;
+      transition: height 0.3s ease;
+    }
 
-.accordion > input[type="checkbox"]:checked ~ .content {
-  height: auto;
-  overflow: visible;
-}
+    .accordion>input[type="checkbox"]:checked~.content {
+      height: auto;
+      overflow: visible;
+    }
 
-.accordion label {
-  display: block;
-}
+    .accordion label {
+      display: block;
+    }
 
-/*
+    /*
  Styling
 */
 
-.accordion {
-  margin-bottom: 1em;
-}
+    .accordion {
+      margin-bottom: 1em;
+    }
 
-.accordion > input[type="checkbox"]:checked ~ .content {
-  padding: 15px;
-  border: 1px solid #e8e8e8;
-  border-top: 0;
-}
+    .accordion>input[type="checkbox"]:checked~.content {
+      padding: 15px;
+      border: 1px solid #e8e8e8;
+      border-top: 0;
+    }
 
-.accordion .handle {
-  margin: 0;
-  font-size: 1.125em;
-  line-height: 1.2em;
-}
+    .accordion .handle {
+      margin: 0;
+      font-size: 1.125em;
+      line-height: 1.2em;
+    }
 
-.accordion label {
-  color: #333;
-  cursor: pointer;
-  font-weight: normsmalal;
-  padding: 15px;
-  background: #e8e8e8;
-}
+    .accordion label {
+      color: #333;
+      cursor: pointer;
+      font-weight: normsmalal;
+      padding: 15px;
+      background: #e8e8e8;
+    }
 
-.accordion label:hover,
-.accordion label:focus {
-  background: #d8d8d8;
-}
+    .accordion label:hover,
+    .accordion label:focus {
+      background: #d8d8d8;
+    }
 
-.accordion .handle label:before {
-  font-family: 'fontawesome';
-  content: "\f054";
-  display: inline-block;
-  margin-right: 10px;
-  font-size: .58em;
-  line-height: 1.556em;
-  vertical-align: middle;
-}
+    .accordion .handle label:before {
+      font-family: 'fontawesome';
+      content: "\f054";
+      display: inline-block;
+      margin-right: 10px;
+      font-size: .58em;
+      line-height: 1.556em;
+      vertical-align: middle;
+    }
 
-.accordion > input[type="checkbox"]:checked ~ .handle label:before {
-  content: "\f078";
-}
-
-
-
+    .accordion>input[type="checkbox"]:checked~.handle label:before {
+      content: "\f078";
+    }
   </style>
 </head>
 {% csrf_token %}
 <h2 style='font-size:24px' align="left">Start Job: {{ config.JOB.job_name }}</h2>
-<hr> 
+<hr>
 
 <form action="startextraction/{{ mybawjob.id }}" method="post">
-  {% csrf_token %}
-  {% include 'executionparameters.html' %}
 
-  <hr>
-  <table style="width:950px" >
-    <TR>
-      <TD style="width:50px"></TD>
-      <TD style="width:200px"></TD>
-      <TD style="width:300px"></TD>
-      <TD style="width:400px"></TD>
-    </TR>
-      <TR> </TR>
+{% csrf_token %}
+{% include 'executionparameters.html' %}
+
+<hr>
+<table style="width:950px">
+  <TR>
+    <TD style="width:50px"></TD>
+    <TD style="width:200px"></TD>
+    <TD style="width:300px"></TD>
+    <TD style="width:400px"></TD>
+  </TR>
+  <TR> </TR>
   <TR> </TR>
   <TR>
     <TD></TD>
     <TD></TD>
     <TD><input type="submit" value="Start">
-      <input type="button" value="Stop" onclick="stopExtraction('{{ mybawjob.id }}')"></TD>
+      <input type="button" value="Stop" onclick="stopExtraction('{{ mybawjob.id }}')">
+    </TD>
   </TR>
 </table>
 <hr>
@@ -174,45 +165,39 @@
     <TD style="font-size:14px">
       <div style="color:#626060">
         <p>
-          The parameters below are automatically updated during the extraction to keep track of what were the last
-          extraction dates.
-        <ul>
-          <li>They are used when extracting historical data with a extraction interval (ex every 15 min extract 10 days
-            of data)</li>
-          <li>They are also used when monitoring new events, to extract only new data.</li>
-          <li>Clear these dates if you want to 'forget' what was done during the last extraction. (you can ignore the
+          The parameters below is updated during the extraction to keep track of what was the last
+          extraction date.
+          Clear this date if you want to 'forget' what was done during the last extraction. (you can ignore the
             time)
-          </li>
-        </ul>
-      
         </p>
       </div>
     </TD>
   </TR>
 </table>
-<table style="width:950px" >
+<table style="width:950px">
   <TR>
     <TD style="width:50px"></TD>
     <TD style="width:200px"></TD>
     <TD style="width:300px"></TD>
     <TD style="width:400px"></TD>
-  </TR> 
+  </TR>
   <TR style="font-size:12px">
     <TD></TD>
     <TD>Last extraction: Modified before</TD>
     <TD>
-      <input type="datetime-local" step=1 id="baw_last_before" name="baw_last_before" size="40" value="{{ baw_last_before }}">
+      <input type="datetime-local" step=1 id="baw_last_before" name="baw_last_before" size="40"
+        value="{{ baw_last_before }}">
     </TD>
   </TR>
-</form>
+  </form>
 </table>
 <hr>
-<table style="width:950px" >
+<table style="width:950px">
   <TR>
     <TD style="width:50px"></TD>
-    <TD ></TD>
+    <TD></TD>
   </TR>
-  <TR >
+  <TR>
     <TD></TD>
     <TD>Job summary
     </TD>
@@ -239,33 +224,35 @@
   </TR>
 
   </TR>
-  </table>
+</table>
 <hr>
-  <section class="accordion">
-    <input type="checkbox" name="collapse" id="handle1">
-    <h2 class="handle">
-      <label for="handle1">
+<section class="accordion">
+  <input type="checkbox" name="collapse" id="handle1">
+  <h2 class="handle">
+    <label for="handle1">
       Instruction details (open for more)
-      </label>
-    </h2>
-    <div class="content">
-      <p> 
-        <ul>
-          <li>Start button runs the extraction in a subprocess.</li>
-          <li>Stop button terminates the extraction if there is an extraction loop (loop rate is set). Otherwise, the extraction
-            can only be stopped by stopping the server (CTRL C)</li>
-          <li>Modified after and modified before: extract bpd instances that changed during this period</li>
-          <li>Extraction interval requires a modified after date. The extraction starts from this date until the # of days
-            requested</li>
-          <li>Extraction interval combined with loop rate enables extracting a period of time and shifting this period for
-            the next loop. Useful to fetch lots of data without impacting too much the BAW server</li>
-          <li># of threads can be increased to allow for some parallelism. Caution: more thread is faster, but more demanding on BAW</li>
-          <li>This page will automatically move to the completed job page when the extraction is completed (that can be
-            long)</li>
-        </ul>
-      </p>  
-    </div>
-  </section>
+    </label>
+  </h2>
+  <div class="content">
+    <p>
+    <ul>
+      <li>Start button runs the extraction in a subprocess.</li>
+      <li>Stop button terminates the extraction if there is an extraction loop (loop rate is set). Otherwise, the
+        extraction
+        can only be stopped by stopping the server (CTRL C)</li>
+      <li>Modified after and modified before: extract bpd instances that changed during this period</li>
+      <li>Extraction interval requires a modified after date. The extraction starts from this date until the # of days
+        requested</li>
+      <li>Extraction interval combined with loop rate enables extracting a period of time and shifting this period for
+        the next loop. Useful to fetch lots of data without impacting too much the BAW server</li>
+      <li># of threads can be increased to allow for some parallelism. Caution: more thread is faster, but more
+        demanding on BAW</li>
+      <li>This page will automatically move to the completed job page when the extraction is completed (that can be
+        long)</li>
+    </ul>
+    </p>
+  </div>
+</section>
 
 
 
