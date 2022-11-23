@@ -24,20 +24,19 @@ def getDefaultConfig():
             "password_env_var": "",
             "project": "",
             "process_name": "",
-            "modified_after": "",
-            "modified_before": "",
+            "from_date": "",
+            "from_date_criteria": "modified",
+            "to_date": "",
+            "to_date_criteria": "modified",
             "paging_size": 0,
-            "exclude_running_cases": False,
+            "status_filter": "Active,Completed,Failed,Terminated,Suspended,Late,At_Risk",
             "loop_rate": 0,
-            "interval_shift": False,
-            "interval_shift_until": "",
             "thread_count": 1,
             "instance_limit": 0,
             "task_data_variables": [],
             "export_exposed_variables": False,
             "csv_at_each_loop": False,
-            "trigger_csv_beyond": 500000,
-            "last_before": "",
+            "trigger_csv_beyond": 500000
         },
         "IPM": {
             "url": "",
@@ -79,22 +78,11 @@ def get_values_from_webUI(request, config):
 
     # get the dates/time from widgets and transform into a date string (add Z at the end)
     # the function does nothing if the key is not in request.POST
-    convert_date(request, config, 'baw_modified_before', 'modified_before')
-    convert_date(request, config, 'baw_modified_after', 'modified_after')
-    convert_date(request, config, 'baw_last_before', 'last_before')
-    convert_date(request, config, 'baw_interval_shift_until', 'interval_shift_until')
+    convert_date(request, config, 'baw_from_date', 'from_date')
+    convert_date(request, config, 'baw_to_date', 'to_date')
 
-    # baw_loop_rate is a string returned by a input of type time. Convert into seconds
     if('baw_loop_rate' in request.POST):
-        if request.POST['baw_loop_rate'] == "":
-            config['BAW']['loop_rate'] = 0
-        else:
-            x = request.POST['baw_loop_rate'].split(':') # value could be "00:00:00"
-            if len(x)==2: config['BAW']['loop_rate'] = 0
-            else: config['BAW']['loop_rate'] = 3600 * int(x[0]) + 60 * int(x[1]) + int(x[2])
-
-    if ('baw_extraction_interval' in request.POST):
-        config['BAW']['extraction_interval'] = int(request.POST['baw_extraction_interval'])
+        config['BAW']['loop_rate'] = int(request.POST['baw_loop_rate'])
 
     if ('baw_thread_count' in request.POST):
         config['BAW']['thread_count'] = int(request.POST['baw_thread_count'])
@@ -126,25 +114,22 @@ def get_values_from_webUI(request, config):
         config['BAW']['export_exposed_variables'] = True
     else:
         config['BAW']['export_exposed_variables'] = False
+    
+    if 'baw_from_date_criteria' in request.POST:
+        config['BAW']['from_date_criteria'] = request.POST['baw_from_date_criteria']
 
-    if 'baw_exclude_running_cases' in request.POST:
+    if 'baw_to_date_criteria' in request.POST:
+        config['BAW']['to_date_criteria'] = request.POST['baw_to_date_criteria']
+
+    if 'baw_statusFilter' in request.POST:
         # means that the check box is on
-        config['BAW']['exclude_running_cases'] = True
-    else:
-        config['BAW']['exclude_running_cases'] = False
-
+        config['BAW']['statusFilter'] = request.POST['baw_statusFilter']
+  
     if 'baw_csv_at_each_loop' in request.POST:
         # means that the check box is checked
         config['BAW']['csv_at_each_loop'] = True
     else:
         config['BAW']['csv_at_each_loop'] = False
-
-    if 'baw_interval_shift' in request.POST:
-        # means that the widget is checked
-        config['BAW']['interval_shift'] = True
-    else:
-        config['BAW']['interval_shift'] = False
-
 
     if 'job_name' in request.POST:
         config['JOB']['job_name'] = request.POST['job_name']
@@ -164,6 +149,8 @@ def get_values_from_webUI(request, config):
         config['IPM']['api_key'] = request.POST['ipm_api_key']    
     if 'ipm_org_key' in request.POST:
         config['IPM']['org_key'] = request.POST['ipm_org_key']
+    if 'ipm_version' in request.POST:
+        config['IPM']['version'] = request.POST['ipm_version']
 
     if 'ipm_project_key' in request.POST:
         config['IPM']['project_key'] = re.sub(' ', '-', request.POST['ipm_project_key'])
@@ -171,22 +158,44 @@ def get_values_from_webUI(request, config):
 
 def set_context_from_config(config):
     # Get the data from the config file and transform them to fit with the values expected in the form
-    if (config['BAW']['modified_after'] != ""):
+    if (config['BAW']['from_date'] != ""):
         # remove the last Z
-        baw_modified_after = config['BAW']['modified_after'][:-1]
+        baw_from_date = config['BAW']['from_date'][:-1]
     else:
-        baw_modified_after = ""
+        baw_from_date = ""
 
-    if (config['BAW']['modified_before'] != ""):
-        baw_modified_before = config['BAW']['modified_before'][:-1]
+    # set the from date criteria
+    if (config['BAW']['from_date_criteria']=="modifiedAfter"):
+        selected_modified_after = "selected"
+        selected_created_after = ""
+        selected_closed_after = ""
+    elif (config['BAW']['from_date_criteria']=="createdAfter"):
+        selected_modified_after = ""
+        selected_created_after = "selected"
+        selected_closed_after = ""
     else:
-        baw_modified_before = ""
+        selected_modified_after = ""
+        selected_created_after = ""
+        selected_closed_after = "selected"
 
-        # data from previous run
-    if (config['BAW']['last_before'] != ""):
-        baw_last_before = config['BAW']['last_before'][:-1]
+    if (config['BAW']['to_date'] != ""):
+        baw_to_date = config['BAW']['to_date'][:-1]
     else:
-        baw_last_before = ""
+        baw_to_date = ""
+
+   # set the to date criteria
+    if (config['BAW']['to_date_criteria']=="modifiedBefore"):
+        selected_modified_before = "selected"
+        selected_created_before = ""
+        selected_closed_before = ""
+    elif (config['BAW']['to_date_criteria']=="createdBefore"):
+        selected_modified_before = ""
+        selected_created_before = "selected"
+        selected_closed_before = ""
+    else:
+        selected_modified_before = ""
+        selected_created_before = ""
+        selected_closed_before = "selected"
 
     # this is an array with variable names
     # concatenate the variable names, separated with a comma
@@ -203,55 +212,38 @@ def set_context_from_config(config):
         version1130 = "selected"
     
     # update rate is now set with a time widget. Transform seconds in json file into HH:MM:SS
-    loop_rate = config['BAW']['loop_rate']
-    m, s = divmod(loop_rate, 60)
-    h, m = divmod(m, 60)
-    baw_loop_rate = f'{h:02d}:{m:02d}:{s:02d}'
+    #loop_rate = config['BAW']['loop_rate']
+    #m, s = divmod(loop_rate, 60)
+    #h, m = divmod(m, 60)
+    #baw_loop_rate = f'{h:02d}:{m:02d}:{s:02d}'
+
 
     # export_exposed_variables is true set the checkbox to on
     if (config['BAW']['export_exposed_variables'] == True):
         baw_exposed_variables = 'checked'
     else: baw_exposed_variables = ''
 
-    # interval_shift is true set the checkbox to on
-    if (config['BAW']['interval_shift'] == True):
-        baw_interval_shift = 'checked'
-        baw_interval_shift_until_disabled = ''
-    else: 
-        baw_interval_shift = ''
-        baw_interval_shift_until_disabled = 'disabled'
-
-    # interval_shift_until date
-    if (config['BAW']['interval_shift_until'] != ""):
-        baw_interval_shift_until= config['BAW']['interval_shift_until'][:-1]
-    else:
-        baw_interval_shift_until = ""
 
     # csv at each loop
     if (config['BAW']['csv_at_each_loop'] == True):
         baw_csv_at_each_loop = 'checked'
     else: baw_csv_at_each_loop = ''
 
-    # exclude running cases
-    if (config['BAW']['exclude_running_cases'] == True):
-        baw_exclude_running_cases = 'checked'
-    else: baw_exclude_running_cases = ''
-
     context = {
         'config': config,
-        'baw_modified_after' : baw_modified_after,
-        'baw_modified_before': baw_modified_before,
-        'baw_last_before' : baw_last_before,
+        'baw_from_date' : baw_from_date,
+        'baw_to_date': baw_to_date,
         'baw_task_data_variables' : task_data_variables,
         'imp_selected_version1131' : version1131,
         'ipm_selected_version1130': version1130,
-        'baw_loop_rate': baw_loop_rate,
         'baw_exposed_variables': baw_exposed_variables,
         'baw_csv_at_each_loop': baw_csv_at_each_loop,
-        'baw_interval_shift': baw_interval_shift, 
-        'baw_interval_shift_until': baw_interval_shift_until,
-        'baw_interval_shift_until_disabled': baw_interval_shift_until_disabled,
-        'baw_exclude_running_cases': baw_exclude_running_cases
+        'selected_modified_after': selected_modified_after,
+        'selected_created_after': selected_created_after,
+        'selected_closed_after': selected_closed_after,
+        'selected_modified_before': selected_modified_before,
+        'selected_created_before': selected_created_before,
+        'selected_closed_before': selected_closed_before
     }
     return context
 

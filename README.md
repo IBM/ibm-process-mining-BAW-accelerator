@@ -3,6 +3,7 @@
 To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
 https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
 
+Bookmark this readme :  
 
 ## Introduction
 This repository is a free contribution provided as-is to easily connect IBM Business Automation Workflow and IBM Process Mining.
@@ -20,8 +21,8 @@ This is a no-code accelerator that can be used by process owners and analysts wh
 - Connect to the BAW server
 - Select the BAW process to mine
 - Optionnaly connect to the IPM server to automatically load the event log into a process mining project
-- Optionnaly set an loop rate (in seconds) to extract new data regularly
-- Optionnaly set an instance limit with a loop rate to fraction the extraction into smaller pieces and reduce the RAM and the impact on BAW.
+- Optionnaly set an loop rate (in seconds) and a paging size to extract data while reducing the RAM needs and the impact on BAW
+- Optionnaly set an instance limit to size the extraction.
 - Optionnaly exclude some BAW data
 - Run several extraction jobs that can be stopped and resumed.
 
@@ -86,13 +87,16 @@ The Web UI enables:
 
 
 ## Running an extraction job
-Before running an extraction job, you can set some running parameters
-- Extraction loop rate defines the pause time between each extraction. You can enter a duration between 1 second and 24 hours. The JSON file enables entering any value as seconds. When the job includes a loop rate, the last extraction period is saved such that restarting the job does not extract the same data again.
+Mandatory parameters:
+- From date and its criteria (modifiedAfter, createdAfter, closedAfter) retrieve the instances that occur/created/closed after this date.
+- To date and its criteria (modifiedBefore, createdBefore, closedBefore) retrieve the instances that occur/created/closed before this date.
+
+Optional parameters:
+- Instance filter status: leave empty to retrieve all instances whatever their status, or list the statuses separated by a comma with no
+- Paging size requires loop_rate>=0.  Paging fractions the extraction steps in order to save RAM and to reduce impact on BAW. 
 - Number of threads increases the speed by splitting the extraction work into several threads. This increase the load on the BAW server too. A good balance needs to be found.
-- Instance limit with loop_rate=0 is used for testing only: each extraction stops when the number of instance specified here is reached. This is useful when sizing the time required to get historical data, or the load on the BAW server or on the RAM
-- Instance limit with loop_rate>=0 is used fraction the extraction steps in order to save RAM and to reduce impact on BAW. 
-- Interval auto shift is used with a time interval [modified_after, modified_before], a loop rate, and optionally an instance_limit. The extraction starts with the initial interval, then shift the interval for another extraction. This can be useful to fragment the extraction when the data in the database is huge.
-- Create a CSV at each loop generates a CSV file at each extraction loop (if events were retrieved). When unchecked, the CSV file is generated when the job is completed, stopped, or when the number of events reaches 500k events (the value can be changed in a code variable)
+- Instance limit is used for testing only: each extraction stops when the number of instance specified here is reached. This is useful when sizing the time required to get historical data, or the load on the BAW server or on the RAM
+- Create a CSV at each loop generates a CSV file at each extraction loop (if events were retrieved). When unchecked, the CSV file is generated when the job is completed, stopped, or when the number of events reaches 500k events (default)
 
 - A job can be stopped if it is looping. The stop is taken into consideration while the job is sleeping.
 - Several jobs can be executed simultaneously.
@@ -106,11 +110,8 @@ The configuration directory includes several extraction examples for the main us
 ### Historical Basic
 - Loop rate = 0
 - instance limit = 0
-- modified before = "2022-10-01T00:00:00Z"
-- (optional) modified_after = "2022-09-01T00:00:00Z"
+- paging size = 0
 - (optional) number of threads = 5
-- Interval auto shift = false
-- Create CSV at each loop = false
 
 The job is executed once and ends-up delivering a CSV file.
 
@@ -118,70 +119,27 @@ The job is executed once and ends-up delivering a CSV file.
 We recommend to use this only if you know that the extracted volume is reasonable.
 
 
-### Historical Instance Limit
-- Loop rate = 6 sec
-- instance_limit = 50
-- modified before = "2022-10-01T00:00:00Z"
-- (optional) modified_after = "2022-11-21T00:00:00Z"
+### Historical with paging
+- Loop rate = 10 sec
+- instance_limit = 0
+- paging size = 30
 - (optional) number of threads = 5
 - (optional) generate CSV at each loop = false
 - Create CSV at each loop = false
 
-During the first extraction loop, the job fetches all the instances that match the dates. But instead of getting the details of the tasks for each instance in one shot (this is the most consumming task), it get the task details for the first 50 instances, sleeps for 6 seconds, and continue getting the task details for the next 50 instance, and so forth until the instance list is completely processed.
+During the first extraction loop, the job fetches all the instances that match the dates. But instead of getting the details of the tasks for each instance in one shot (this is the most consumming task), it get the task details for the first 30 instances, sleeps for 6 seconds, and continue getting the task details for the next 30 instance, and so forth until the instance list is completely processed.
 
-Optionnaly we can generate a CSV file at each loop, and therefore keeping the RAM low. Without checking this option, a CSV file is generated each time we exceed 500k events (default). This threshold can be changed in the configuration file with 'event_number_csv_trigger'
+Optionnaly we can generate a CSV file at each loop, and therefore keeping the RAM low. Without checking this option, a CSV file is generated each time we exceed 500k events (default). This threshold can be changed in the configuration file with 'trigger_csv_beyond'
 
 This is the recommended approach for extracting historical data.
 
-### Historical Interval Shifting
-- Loop rate = 5 seconds
-- modified before = "2022-10-01T00:00:00Z"
-- modified after = "2022-09-01T00:00:00Z"
-- instance_limit = 0
-- (optional) number of threads = 5
-- (optional) generate CSV at each loop = false
-- Create CSV at each loop = false
-
-This job starts extracting 1 month of data from modified after date (Sept 1, 2022), sleeps for 60 seconds, extracts the next month, and so forth until modified_before is reached.
-
-This scenario is interesting to lower the impact on the RAM and on the BAW server. It is less predictable as the scenario that limits the number of instances. But it can be interesting to generate a CSV each day or each month.
-
-It can be combined with an instance_limit
-
-### Historical Interval Shifting Instance Limit
-- Loop rate = 5 seconds
-- modified before = "2022-10-01T00:00:00Z"
-- modified after = "2022-09-01T00:00:00Z"
-- instance_limit = 30
-- (optional) number of threads = 5
-- (optional) generate CSV at each loop = false
-- Create CSV at each loop = false
-
-Same as above, but each 'month' extraction is possibly fragmented in packs of 30 instances.
-
 ### Performance Sizing
 - Loop rate = 0
-- instance_limit = 1000
-- (optional) modified before = "2022-10-01T00:00:00Z"
-- (optional) modified after = "2022-09-01T00:00:00Z"
+- instance_limit = 100
 - (optional) number of threads = 5
 
-The job extracts a maximum of 1000 instances as well as the task details. Then it generates the CSV.
-We can't predict which instances are retrieved, therefore this is restricted to experimenting the performance before using another scenario 
-
-### Monitor New Events
-- Loop rate = 10 minutes
-- generate CSV at each loop = true
-- instance limit = 0
-- modified after = "2022-11-21T00:00:00Z"
-- (optional) number of threads = 5
-
-The extraction job fetches new changes in BAW since "2022-11-21T00:00:00ZZ". If you first extracted historical data, the job kept the last extraction date in the field 'last before'. You should copy this date and use it as 'modified after' date for the near-real-time job.
-
-Then the job sleeps for 10 minutes, and retry getting new events, and so forth.
-
-A CSV file is generated at each loop. If a Process Mining configuration is set, the CSV is uploaded automatically such that new data is usable in process mining.
-
+The job extracts a maximum of 100 instances as well as the task details. Then it generates the CSV.
+You can deduce the time needed to extract all the data and determine the configuration to adopt
 
 ## Configuring the accelerator for BAW
 The accelerator settings are managed in a form opened at `http://127.0.0.1:8000/bawjobs` 
@@ -321,33 +279,39 @@ Note how the BAW business data are implemented in JSON.
 ```
 {
     "JOB": {
-        "job_name": "CREATED",
+        "job_name": "Pat_HistoricalBasic",
         "exit": 0
     },
     "BAW": {
-        "root_url": "http://baw.com/",
+        "root_url": "https://baw.com",
         "user": "admin",
-        "password": "",
-        "password_env_var": "BAW_ADMIN_PASSWORD",
-        "project": "prj",
-        "process_name": "process",
-        "modified_after": "",
-        "modified_before": "",
-        "loop_rate": 0,
-        "interval_shift": false,
-        "thread_count": 1,
+        "password": "admin",
+        "password_env_var": "",
+        "project": "HSS",
+        "process_name": "Standard HR Open New Position",
+        "from_date": "2022-10-08T23:44:44Z",
+        "from_date_criteria": "createdAfter",
+        "to_date": "2022-11-23T22:33:33Z",
+        "to_date_criteria": "modifiedBefore",
+        "paging_size": 30,
+        "status_filter": "Active,Completed,Failed,Terminated,Suspended,Late,At_Risk",
+        "loop_rate": 1,
+        "thread_count": 5,
         "instance_limit": 0,
-        "task_data_variables": [],
+        "task_data_variables": [
+            "requisition.gmApproval",
+            "requisition.requester"
+        ],
         "export_exposed_variables": false,
         "csv_at_each_loop": false,
-        "last_before": ""
+        "trigger_csv_beyond": 500000
     },
     "IPM": {
-        "url": "",
-        "user_id": "",
-        "api_key": "",
-        "org_key": "",
-        "project_key": "",
+        "url": "https://processmining.com",
+        "user_id": "task.miner",
+        "api_key": "8a5kga87eqvd1180",
+        "org_key": "ca2b2685",
+        "project_key": "newbawextract",
         "version": "1.13.1+"
     }
 }

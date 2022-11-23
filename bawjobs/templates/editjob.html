@@ -163,7 +163,7 @@
     <TR>
         <TD></TD>
         <TD colspan=4><div style="color:#797676" class="bx--form__helper-text"><i>You can store the password in an environment variable, 
-            such that it is not visible in the config file.<br>Ex linux: EXPORT BAW_ADMIN_PASSWORD=myadminpassword. Then enter BAW_ADMIN_PASSWORD in this field</i></div></TD>
+            such that it is not visible in the config file.<br>Ex linux: export BAW_ADMIN_PASSWORD=myadminpassword. Then enter BAW_ADMIN_PASSWORD in this field</i></div></TD>
     </TR>
 </table>
 </div>
@@ -200,17 +200,6 @@
             </div>
         </TD>
     </TR>
-    <TR>
-        <TD></TD>
-        <TD>Exclude running cases: </TD>
-        <TD>
-            <input type="checkbox" id="baw_exclude_running_cases" name="baw_exclude_running_cases" {{ baw_exclude_running_cases }}>
-        </TD>
-        <TD>
-            <div style="color:#797676" class="bx--form__helper-text"><i>Only export completed cases</i>
-            </div>
-        </TD>
-    </TR>
 </table>
 <table>
     <TR>
@@ -234,19 +223,6 @@
       <TD style="width:300px"></TD>
       <TD style="width:400px"></TD>
     </TR> 
-    <TR style="font-size:12px">
-      <TD></TD>
-      <TD>Last extraction: Modified before</TD>
-      <TD>
-        <input type="datetime-local" step=1 id="baw_last_before" name="baw_last_before" size="40" value="{{ baw_last_before }}">
-      </TD>
-      <TD>
-        <div style="color:#797676" class="bx--form__helper-text"><i>Store the 'modified_before' data from last extraction. Clear it
-            if you need to restart the same extraction.
-        </i>
-        </div>
-    </TD>
-    </TR>
   </table>
 <hr>
 <section class="accordion">
