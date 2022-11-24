@@ -158,43 +158,6 @@
 <table style="width:950px">
   <TR>
     <TD style="width:50px"></TD>
-    <TD style="width:900px"></TD>
-  </TR>
-  <TR>
-    <TD></TD>
-    <TD style="font-size:14px">
-      <div style="color:#626060">
-        <p>
-          The parameters below is updated during the extraction to keep track of what was the last
-          extraction date.
-          Clear this date if you want to 'forget' what was done during the last extraction. (you can ignore the
-            time)
-        </p>
-      </div>
-    </TD>
-  </TR>
-</table>
-<table style="width:950px">
-  <TR>
-    <TD style="width:50px"></TD>
-    <TD style="width:200px"></TD>
-    <TD style="width:300px"></TD>
-    <TD style="width:400px"></TD>
-  </TR>
-  <TR style="font-size:12px">
-    <TD></TD>
-    <TD>Last extraction: Modified before</TD>
-    <TD>
-      <input type="datetime-local" step=1 id="baw_last_before" name="baw_last_before" size="40"
-        value="{{ baw_last_before }}">
-    </TD>
-  </TR>
-  </form>
-</table>
-<hr>
-<table style="width:950px">
-  <TR>
-    <TD style="width:50px"></TD>
     <TD></TD>
   </TR>
   <TR>
@@ -240,13 +203,15 @@
       <li>Stop button terminates the extraction if there is an extraction loop (loop rate is set). Otherwise, the
         extraction
         can only be stopped by stopping the server (CTRL C)</li>
-      <li>Modified after and modified before: extract bpd instances that changed during this period</li>
-      <li>Extraction interval requires a modified after date. The extraction starts from this date until the # of days
-        requested</li>
-      <li>Extraction interval combined with loop rate enables extracting a period of time and shifting this period for
-        the next loop. Useful to fetch lots of data without impacting too much the BAW server</li>
+        <li>Paging size requires a loop rate. Each loop processes 'n' instances, the next loops will process the next 'n' instances, and so on. 
+          Used to reduce the impact on the RAM (if generate CSV at each loop), to reduce the impact on BAW, and to limit the risks of deconnection with BAW server.</li>
       <li># of threads can be increased to allow for some parallelism. Caution: more thread is faster, but more
         demanding on BAW</li>
+      <li>instance limit is used to size the extraction work. For example experiment with 100 instances to see how long it takes. 
+        When combined with offset, you can retrieve specific instances (ex retrieve 2 instances starting at 210).</li>
+        <li> The date criteria can be 'create', 'modified' or 'closed'. You can combine them like for example createAfter and closedBefore to retrieve the instances
+          fit entirely within the date period. 'modifiedAfter' and 'modifiedBefore' retrieve instances that were changed during this period and all their related tasks (that can occur beyond the period) 
+        </li>
       <li>This page will automatically move to the completed job page when the extraction is completed (that can be
         long)</li>
     </ul>

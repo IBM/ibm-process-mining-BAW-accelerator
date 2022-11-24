@@ -33,6 +33,7 @@ def getDefaultConfig():
             "loop_rate": 0,
             "thread_count": 1,
             "instance_limit": 0,
+            "offset": 0,
             "task_data_variables": [],
             "export_exposed_variables": False,
             "csv_at_each_loop": False,
@@ -89,6 +90,9 @@ def get_values_from_webUI(request, config):
 
     if ('baw_instance_limit' in request.POST):
         config['BAW']['instance_limit'] = int(request.POST['baw_instance_limit'])
+
+    if ('baw_offset' in request.POST):
+        config['BAW']['offset'] = int(request.POST['baw_offset'])
 
     if ('baw_paging_size' in request.POST):
         config['BAW']['paging_size'] = int(request.POST['baw_paging_size'])

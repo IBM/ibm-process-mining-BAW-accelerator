@@ -99,11 +99,19 @@
   <TR>
   <TR>
     <TD></TD>
-    <TD># instance limit</TD>
+    <TD>instance limit</TD>
     <TD><input type="number" min=0 vid="baw_instance_limit" name="baw_instance_limit" size="40"
         value="{{ config.BAW.instance_limit }}"></TD>
     <TD>
-      <div style="color:#797676" class="bx--form__helper-text"><i>Used for sizing experiments only
+      <div style="color:#797676" class="bx--form__helper-text"><i>Used for sizing experiments or retrieving specific instances
+  </TR>
+  <TR>
+    <TD></TD>
+    <TD>offset</TD>
+    <TD><input type="number" min=0 vid="baw_offset" name="baw_offset" size="40"
+        value="{{ config.BAW.offset }}"></TD>
+    <TD>
+      <div style="color:#797676" class="bx--form__helper-text"><i>Ignore the first 'offset' instances. Used combined with 'instance limit'
   </TR>
   <TR>
     <TD></TD>
