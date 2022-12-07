@@ -1,10 +1,13 @@
 # Accelerator for IBM Business Automation Workflow and IBM Process Mining
 ## NOTE
+
 To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
+
+<a href="https://github.com/IBM/ibm-process-mining-BAW-accelerator">Go to the GITHUB Repository</a>
+
 
 <a href="https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils"> https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils</a>
 
-Bookmark this readme :  
 
 ## Introduction
 This repository is a free contribution provided as-is to easily connect IBM Business Automation Workflow and IBM Process Mining.
