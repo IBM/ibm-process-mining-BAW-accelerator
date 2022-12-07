@@ -1,11 +1,10 @@
 # Accelerator for IBM Business Automation Workflow and IBM Process Mining
 ## NOTE
 
-To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
-
+To obtain the librairies required to execute the accelerator:
 <a href="https://github.com/IBM/ibm-process-mining-BAW-accelerator">Go to the GITHUB Repository</a>
 
-
+You will also need contact Patrick Megard (patrick.megard@fr.ibm.com) to get access to this repository:
 <a href="https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils"> https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils</a>
 
 
