@@ -1,7 +1,8 @@
 # Accelerator for IBM Business Automation Workflow and IBM Process Mining
 ## NOTE
 To obtain the librairies required to execute the accelerator, please contact Patrick Megard (patrick.megard@fr.ibm.com).
-https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils
+
+<a href="https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils"> https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils</a>
 
 Bookmark this readme :  
 
