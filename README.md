@@ -105,6 +105,11 @@ Running a job without the WebUI is straightforward, and this way it can be sched
 ```
 python3 BAW_to_IMP.py config/config_myJobName.json
 ```
+
+Web UI (no code) for the extraction parameters:
+
+![Extraction parameters](./pictures/Extraction_config.jpeg)
+
 ## Main extraction scenarios
 The configuration directory includes several extraction examples for the main use cases
 ### Historical Basic
@@ -166,6 +171,9 @@ If you want to add specific process or task variables, you can list them in the 
 If the IBM Process Mining configuration left empty, the resulting CSV files will be loaded manually in IBM Process Mining.
 
 In BAW, you can find the project name (acronym) in parenthesis besides the process name in <BAW_URL>/ProcessAdmin. 
+
+![Web UI for BAW connection](./pictures/BAW_config.jpeg)
+
 
 See a screen shot of the BAW inspector at the bottom of this document
 
@@ -271,6 +279,9 @@ In the IBM Process Mining User Profile, make sure you have API key enabled, and 
 
 See a screen shot of the Process Mining screen at the bottom of this document
 
+Web UI for Process Mining connection:
+
+![Web UI for Process Mining connection](./pictures/IPM_config.jpeg)
 
 ## Configuration file
 Instead of using the web server to configure an extraction job, you can create an edit configuration files. The configuration below results from the parameters entered with the Web UI.
@@ -316,6 +327,12 @@ Note how the BAW business data are implemented in JSON.
     }
 }
 ```
+## BAW task timestamps and status
+The extraction job fetches data from BAW database through the REST API. 
+- Since BAW data is often purged, we can only retrieve data from instances that have not been purged.
+- We create an event for each task in each BPD instance. For each task, we can only get the data available that correspond to the latest task update. These timestamps are retrieved and used to infer the lifecycle of the task (start, end), but the reality can be more complex and we might miss every state change in between.
+- Tasks that are not yet complete have a end_time as "". Service time is not computed in this case
+
 
 ## Screen shot to find connection parameters
 
