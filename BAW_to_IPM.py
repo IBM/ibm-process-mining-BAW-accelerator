@@ -1,4 +1,3 @@
-from curses.panel import update_panels
 from warnings import catch_warnings
 import BAWExtraction_utils as baw
 import ProcessMining_utils as ipm
@@ -14,7 +13,6 @@ import re
 import asyncio
 
 
-PRINT_TRACE = 1
 BACKUP_FILENAME = "BAW_IPM_backup.idp"
 BAW_SERVER_TIME_ZONE = 0 # add or remove hours / greenwich timezone
 CSV_PATH = "data/"
@@ -109,10 +107,12 @@ def upload_csv(config, logger):
                 print("unauthorized access to processmining")
                 logger.error("unauthorized access to processmining")
 
+logging_level = logging.INFO
+logging_level = logging.DEBUG
+
 
 def main(argv):
     #debug
-    print("argv %s" % argv)
     if (len(argv) ==1 ) : argv.append("config/config_Pat_HistoricalBasic.json")
     if (len(argv) == 1) :
         print("configuration file required")
@@ -134,7 +134,7 @@ def main(argv):
     with open(argv[1], 'r') as file:
         config = json.load(file) # keep the original
         file.close()
-    logger = baw.setup_logger({"logfile" : "logs/"+config['JOB']['job_name']+".log"}, logging.INFO)
+    logger = baw.setup_logger({"logfile" : "logs/"+config['JOB']['job_name']+".log"}, logging_level)
 
     while(1):
         # read again the config file to catch changes (like exit=1)
@@ -212,6 +212,7 @@ def main(argv):
                 json.dump(config, file, indent=4)
                 file.close()
             print("Exit from extraction job %s" % config['JOB']['job_name'])
+            logger.info("Exit from extraction job %s" % config['JOB']['job_name'])
             exit() 
 
         # Sleep until the next loop
