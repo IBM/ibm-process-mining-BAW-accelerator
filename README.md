@@ -73,7 +73,7 @@ When the server is started, open a web browser and connect to your local host UR
 
 Alternatively, when a configuration json file is saved, you can directly run the extraction by executing the python program
 ```
-python3 BAW_to_IMP.py config/config_myJobName.json
+python3 BAW_to_IPM.py config/config_myJobName.json
 ```
 
 ## Configuring the extraction job
