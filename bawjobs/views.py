@@ -25,11 +25,11 @@ def getDefaultConfig():
             "project": "",
             "process_name": "",
             "from_date": "",
-            "from_date_criteria": "modified",
+            "from_date_criteria": "modifiedAfter",
             "to_date": "",
-            "to_date_criteria": "modified",
+            "to_date_criteria": "modifiedBefore",
             "paging_size": 0,
-            "status_filter": "Active,Completed,Failed,Terminated,Suspended,Late,At_Risk",
+            "status_filter": "",
             "loop_rate": 0,
             "thread_count": 1,
             "instance_limit": 0,
@@ -125,9 +125,8 @@ def get_values_from_webUI(request, config):
     if 'baw_to_date_criteria' in request.POST:
         config['BAW']['to_date_criteria'] = request.POST['baw_to_date_criteria']
 
-    if 'baw_statusFilter' in request.POST:
-        # means that the check box is on
-        config['BAW']['statusFilter'] = request.POST['baw_statusFilter']
+    if 'baw_status_filter' in request.POST:
+        config['BAW']['status_filter'] = request.POST['baw_status_filter']
   
     if 'baw_csv_at_each_loop' in request.POST:
         # means that the check box is checked
