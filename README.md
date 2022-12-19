@@ -30,6 +30,7 @@ This is a no-code accelerator that can be used by process owners and analysts wh
 - Run several extraction jobs that can be stopped and resumed.
 
 ## How to Install the Accelerator
+If you are using the Techzone environment for BAW, please see the next section
 Prerequisite: Python3 
 
 Get this repository in your local environment
@@ -42,7 +43,6 @@ source myenv/bin/activate
 pip install -r requirements.txt
 pip install django
 pip install requests
-python manage.py migrate
 ```
 
 The Web server is using Django. You need to generate a Django secret and to add it line 25 of ```execute_script/settings.py```.
@@ -57,6 +57,31 @@ When you get access, download the zip file, and uncompress it.
 You will obtain a folder called ```ibm-process-mining-connectors-utils-main```
 Copy all the files that are in this folder into the ibm-process-mining-BAW-accelerator
 
+## How to Install the Accelerator on Techzone
+The Techzone environment available from https://techzone.ibm.com/resource/ibm-business-automation-traditional-and-on-premise can be used to show the BAW extractor.
+
+Download the zip files from github:
+https://github.com/IBM/ibm-process-mining-BAW-accelerator
+https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils (request access to patrick.megard@fr.ibm.com)
+
+You will obtain a folder called ```ibm-process-mining-BAW-accelerator-main``` and ```ibm-process-mining-connectors-utils-main```
+Copy all the files that are in ```ibm-process-mining-connectors-utils-main``` into the folder ibm-process-mining-BAW-accelerator
+
+Open a Windows cmd terminal. Python.3.9 is already installed. Run the following commands:
+```
+pip install -r requirements.txt
+pip install django
+pip install requests
+```
+
+Run the accelerator:
+```
+python manage.py runserver
+```
+A pre-built extraction configuration file is available: ```config/config_techzone.json``` that you can upload using the WEB UI, or that you can use directly with 
+```
+python BAW_to_IPM.py config/config_techzone.json
+```
 
 ## How to Run the Accelerator
 When running a new shell you need to activate the virtual environment before executing the accelerator script:
