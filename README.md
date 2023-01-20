@@ -74,6 +74,9 @@ pip install django
 pip install requests
 ```
 
+The Web server is using Django. You need to generate a Django secret and to add it line 25 of ```execute_script/settings.py```.
+You can generate a Django key from this site: https://djecrety.ir/
+
 Run the accelerator:
 ```
 python manage.py runserver
