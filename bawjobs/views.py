@@ -55,7 +55,11 @@ def convert_date(request, config, key, fieldname):
             config['BAW'][fieldname] = ""
         else:
             # yyyy-mm-dd hh:mm:ss if time=00:00:00 we get only 00:00, so add the seconds
-            if (request.POST[key][11:] == "00:00" ): 
+            #if (request.POST[key][11:] == "00:00" ): 
+            #    config['BAW'][fieldname] = request.POST[key]+":00Z"
+            #else:
+            #    config['BAW'][fieldname] = request.POST[key]+"Z"
+            if len(request.POST[key]) == 16:
                 config['BAW'][fieldname] = request.POST[key]+":00Z"
             else:
                 config['BAW'][fieldname] = request.POST[key]+"Z"

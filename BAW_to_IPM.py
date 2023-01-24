@@ -108,7 +108,7 @@ def upload_csv(config, logger):
                 logger.error("unauthorized access to processmining")
 
 logging_level = logging.INFO
-logging_level = logging.DEBUG
+#logging_level = logging.DEBUG
 
 
 def main(argv):
