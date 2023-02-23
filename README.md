@@ -19,6 +19,9 @@ After having discovered the problems and having analyzed the root-causes, the an
 
 With Process Mining, analysts can create what-if simulation scenarios in order to obtain instantly the ROI, the to-be KPIs.
 
+## Credits
+Thanks to Gerry Baird who wrote https://github.com/gerry-baird/grump, from which we reused many functions to retrieve data from BAW with the REST API.
+
 ## How to Use the Accelerator
 This is a no-code accelerator that can be used by process owners and analysts who just need to fill-out a form to:
 - Connect to the BAW server
