@@ -4,8 +4,6 @@
 To obtain the librairies required to execute the accelerator:
 <a href="https://github.com/IBM/ibm-process-mining-BAW-accelerator">Go to the GITHUB Repository</a>
 
-You will also need contact Patrick Megard (patrick.megard@fr.ibm.com) to get access to this repository:
-<a href="https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils"> https://github.com/Patrick-Megard/ibm-process-mining-connectors-utils</a>
 
 
 ## Introduction
@@ -21,6 +19,22 @@ With Process Mining, analysts can create what-if simulation scenarios in order t
 
 ## Credits
 Thanks to Gerry Baird who wrote https://github.com/gerry-baird/grump, from which we reused many functions to retrieve data from BAW with the REST API.
+
+## Important Note
+We recommend to directly run the python program, without the web UI (managed by Django). Some people reported security issues with Django.
+All you need to do is to call the python program with a configuration json file as parameter.
+
+```
+python3 BAW_to_IPM.py config/config_myJobName.json
+```
+
+Installation: 
+```
+python3 -m venv myenv
+source myenv/bin/activate
+pip install -r requirements.txt
+pip install requests
+```
 
 ## How to Use the Accelerator
 This is a no-code accelerator that can be used by process owners and analysts who just need to fill-out a form to:
